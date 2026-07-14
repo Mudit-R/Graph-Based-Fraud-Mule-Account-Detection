@@ -1,0 +1,42 @@
+name: fraud-detection-rapids
+# ─────────────────────────────────────────────────────────────────────────────
+# RAPIDS cuGraph requires Linux (WSL2 on Windows).
+# Setup steps:
+#   1. Open WSL2 terminal (Ubuntu 22.04 recommended)
+#   2. Install Miniforge: https://github.com/conda-forge/miniforge
+#   3. Run: conda env create -f environment-rapids.yml
+#   4. conda activate fraud-detection-rapids
+# ─────────────────────────────────────────────────────────────────────────────
+channels:
+  - rapidsai
+  - nvidia
+  - pytorch
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.11
+  - cuda-version=12.1
+  # ── RAPIDS ──────────────────────────────────────────────────────
+  - rapidsai::cudf=24.10
+  - rapidsai::cugraph=24.10
+  - rapidsai::cuml=24.10
+  - rapidsai::cuspatial=24.10
+  # ── PyTorch + CUDA ──────────────────────────────────────────────
+  - pytorch::pytorch=2.4.0
+  - pytorch::pytorch-cuda=12.1
+  # ── ML & Data ───────────────────────────────────────────────────
+  - conda-forge::pandas=2.2
+  - conda-forge::numpy=1.26
+  - conda-forge::scikit-learn=1.5
+  - conda-forge::xgboost=2.0
+  - conda-forge::networkx=3.3
+  - conda-forge::matplotlib=3.9
+  - conda-forge::seaborn=0.13
+  - conda-forge::tqdm=4.66
+  - conda-forge::jupyter=1.0
+  - conda-forge::jupyterlab=4.2
+  - pip
+  - pip:
+    - torch-geometric==2.5.3
+    - loguru==0.7.2
