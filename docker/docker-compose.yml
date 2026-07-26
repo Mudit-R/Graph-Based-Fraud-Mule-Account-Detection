@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  # ── Fraud Detection API ──────────────────────────────────────────────────────
+  fraud-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: fraud-detection-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../outputs:/app/outputs:ro   # Read-only mount of trained model outputs
+      - ../mlruns:/app/mlruns:ro
+    environment:
+      - PYTHONPATH=/app
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - fraud-net
+
+  # ── MLflow Tracking UI ───────────────────────────────────────────────────────
+  mlflow:
+    image: python:3.11-slim
+    container_name: mlflow-ui
+    command: >
+      sh -c "pip install mlflow -q &&
+             mlflow ui --backend-store-uri /mlruns
+             --host 0.0.0.0 --port 5000"
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../mlruns:/mlruns
+    networks:
+      - fraud-net
+    restart: unless-stopped
+
+networks:
+  fraud-net:
+    driver: bridge
