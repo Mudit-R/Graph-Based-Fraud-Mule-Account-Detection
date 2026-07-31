@@ -1,0 +1,71 @@
+Project Briefs: Built to Close Gaps for NPCI (and Read Well for FAANG)
+
+Two projects below. Project 1 is the priority — it directly answers three JD bullets (Graph AI, fraud/AML, GPU acceleration) that your resume currently has zero coverage for. Project 2 upgrades something you already have (NextChapter) into an explicitly agentic system, which is now table stakes for GenAI-adjacent roles at FAANG too.
+
+Build Project 1 first. If you have time, do Project 2 as an extension of NextChapter rather than from scratch.
+
+Project 1: Graph-Based Fraud & Mule Account Detection
+Why this project
+
+It's the single highest-leverage thing you can add. NPCI's JD mentions GNN/GCN/GAT, mule detection, and graph-based fraud detection by name. FAANG interviewers (especially at payments/trust-and-safety-adjacent teams — Stripe, PayPal, Meta integrity, Google Pay) ask almost exactly this question in system design rounds: "how would you detect a fraud ring in a transaction network?" Having actually built it beats reciting the theory.
+
+Dataset options (pick one)
+PaySim (synthetic mobile money transaction simulator) — closest analog to UPI/NPCI's actual domain. ~6.3M transactions, fraud-labeled. Good for building a transaction graph from scratch (you decide node/edge construction, which is itself a talking point).
+Elliptic++ (Bitcoin transaction + actor graph, licit/illicit labeled, ~200K nodes) — already graph-native, temporal, well-studied, easier to benchmark against published baselines. Better if you want a cleaner academic comparison.
+
+Recommendation: start with PaySim — because you build the graph yourself, you can talk fluently in interviews about why you chose your node/edge schema, which is exactly what a system-design interviewer probes.
+
+Pipeline (build in this order)
+
+1. Graph construction
+
+Nodes = accounts, Edges = transactions (directed, weighted by amount, timestamped)
+Store as both an edge list (for PyTorch Geometric) and a property graph (for feature computation)
+
+2. Feature engineering (tabular + graph)
+
+Tabular: transaction amount, frequency, time-of-day, account age proxies
+Graph-structural: degree, in/out-degree ratio, PageRank, clustering coefficient, k-core number, ego-graph density
+Temporal: rolling transaction counts/amounts per account over sliding windows
+
+3. Baseline models (don't skip this — it's your comparison table)
+
+Logistic Regression and XGBoost/LightGBM on tabular + graph-structural features only (no GNN)
+This baseline is what most real production fraud systems actually run — showing you understand why you'd reach for a GNN over a strong tabular baseline is more impressive than jumping straight to deep learning
+
+4. Graph models (PyTorch Geometric)
+
+GCN → GraphSAGE → GAT, in that order of complexity
+Handle class imbalance with weighted BCE or focal loss (fraud is always <1-2% positive)
+Use time-based train/test splits, never random splits — random splits leak future information into training and silently inflate metrics. Explicitly calling this out in your README is a strong signal of rigor.
+
+5. Explainability
+
+Run GNNExplainer (or SHAP on the tabular baseline) on a handful of flagged accounts
+AML/fraud systems are regulated — being able to explain why a node was flagged is a real requirement, not decoration. Mention this in your write-up.
+
+6. Evaluation
+
+Precision@K, Recall@K, PR-AUC (not just ROC-AUC — with <2% positive rate, ROC-AUC is misleadingly high)
+Report a full comparison table: LogReg vs XGBoost vs GCN vs GraphSAGE vs GAT
+
+7. GPU acceleration (this is the part most candidates skip — do it)
+
+Recompute your graph-structural features (PageRank, clustering coefficient, k-core) using RAPIDS cuGraph instead of NetworkX
+Benchmark and report the speedup (e.g., "47x faster on 200K-node graph, 4.2s → 0.09s") — a concrete number here is exactly the "GPU/CUDA optimization" bullet NPCI asked for, and it's a great "tell me about optimizing something" interview story for FAANG too
+
+8. Production layer (this is what separates a notebook from a resume line)
+
+Serve the best model behind a FastAPI endpoint, containerized with Docker
+Add a lightweight batch-scoring script separate from the real-time endpoint (mirrors how real fraud systems run both modes)
+Track experiments with MLflow (params, metrics, model artifacts) — even a local MLflow instance is enough
+Add a simple drift check (Population Stability Index between train and a held-out "future" batch) that would fire an alert — even a stub is a legitimate talking point about production ML maturity
+Stretch goals (only if time allows, in priority order)
+Synthetic mule-ring injection: hand-construct a small ring of colluding accounts and measure recall specifically on that ring — a very concrete, tellable story
+Temporal Graph Network (TGN or EvolveGCN) instead of a static snapshot — shows you know the field is moving toward temporal graphs
+A short federated-learning simulation (e.g., using Flower) training the same model across 3 simulated "banks" without sharing raw data — directly matches NPCI's mention of privacy-preserving/federated AI, and is a strong differentiator almost no other candidate will have
+What your resume bullet should look like once built
+
+Built a graph-based fraud detection pipeline on 6M+ simulated payment transactions, engineering graph-structural and temporal features and training GCN/GraphSAGE/GAT models (PyTorch Geometric) against XGBoost baselines; achieved [X] PR-AUC using time-based splits, and accelerated feature computation 40x+ via RAPIDS cuGraph GPU offloading.
+
+Fill in the real number once you have it — don't estimate it in advance.
