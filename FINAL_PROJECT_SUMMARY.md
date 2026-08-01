@@ -1,11 +1,11 @@
-# 🏆 Graph-Based Fraud & Mule Account Detection — Complete Project & Interview Report
+# Graph-Based Fraud & Mule Account Detection — Complete Project & Interview Report
 
 > **Comprehensive End-to-End System Benchmark & Architectural Synthesis**  
 > *Dataset: PaySim 6.36M Payment Transactions | 3.28M Account Nodes | 2.77M Edge Transactions*
 
 ---
 
-## 📊 1. Master Model Benchmark Comparison
+## 1. Master Model Benchmark Comparison
 
 | Model Strategy | PR-AUC | ROC-AUC | F1-Score | Precision | Recall | Precision@100 | Precision@500 |
 |---|---|---|---|---|---|---|---|
@@ -15,28 +15,28 @@
 | **GNN — GCN** | 0.0211 | 0.6799 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0080 |
 | **GNN — GraphSAGE** | 0.0044 | 0.7213 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
 | **GNN — GAT (Graph Attention)** | 0.0448 | **0.9129** | 0.0000 | 0.0000 | 0.0000 | 0.1300 | 0.1300 |
-| 🥇 **Hybrid GAT + XGBoost** | **0.0715** | **0.8747** | **0.0367** | **0.0187** | **0.8607** | **0.7500** | **0.2340** |
+| **Hybrid GAT + XGBoost** | **0.0715** | **0.8747** | **0.0367** | **0.0187** | **0.8607** | **0.7500** | **0.2340** |
 
 ---
 
-## 🎯 2. Top 3 Model Highlights & Trade-Offs
+## 2. Top Model Highlights & Trade-Offs
 
-1. 🥇 **GAT Multi-Head Attention GNN**:
-   - Achieved the **highest ROC-AUC of all standalone models (`0.9129`)**.
+1. **GAT Multi-Head Attention GNN**:
+   - Achieved the **highest ROC-AUC of all standalone models (0.9129)**.
    - Proved that multi-head graph attention ($lpha_{ij}$) prevents node over-smoothing by weighting suspicious neighbors higher than legitimate transaction partners.
 
-2. 🥈 **Hybrid GAT + XGBoost Stacking Ensemble**:
-   - Achieved **Precision@100 = 0.7500** (75 out of the top 100 accounts flagged are confirmed fraud!).
+2. **Hybrid GAT + XGBoost Stacking Ensemble**:
+   - Achieved **Precision@100 = 0.7500** (75 out of the top 100 accounts flagged are confirmed fraud).
    - Achieved **Recall = 86.07%** (Catches 86.1% of all fraud cases across 6.36M transactions).
    - Fuses GAT's deep 0.9129 ROC-AUC graph attention signal with XGBoost's non-linear decision tree boundary splitting.
 
-3. 🥉 **LightGBM Baseline**:
+3. **LightGBM Baseline**:
    - Achieved **Precision@500 = 0.5140** (51.4% of top 500 flagged accounts are confirmed fraud).
    - Ideal for human fraud investigation teams with fixed daily alert review capacity.
 
 ---
 
-## 🔬 3. Technical Methodology & System Architecture
+## 3. Technical Methodology & System Architecture
 
 ### A. Graph Topology & Construction (`src/graph/builder.py`)
 - Filtered 6.36M raw PaySim records down to `TRANSFER` and `CASH_OUT` events (2.77M directed edges).
@@ -62,7 +62,7 @@
 
 ---
 
-## 📝 4. High-Impact Resume Bullet Points
+## 4. High-Impact Resume Bullet Points
 
 ```text
 • Engineered an end-to-end Graph ML fraud detection pipeline processing 6.36M payment 
@@ -84,7 +84,7 @@
 
 ---
 
-## 🛠️ How to Run & Reproduce
+## 5. How to Run & Reproduce
 
 ```powershell
 # 1. Run full 5-step pipeline (Graph + Features + Baselines + GNNs)
