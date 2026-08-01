@@ -3,6 +3,10 @@ src/graph/builder.py
 ──────────────────────────────────────────────────────────────────────────────
 Constructs a transaction graph from the PaySim CSV dataset.
 
+Compatibility notes:
+  - NetworkX 3.0+ removed write_gpickle/read_gpickle → using stdlib pickle
+  - PyTorch 2.6+ requires weights_only=False for non-tensor objects
+
 Design decisions (discuss in interviews):
 ──────────────────────────────────────────
 • Directed edges  — mule accounts receive funds from many origins (high
@@ -206,7 +210,10 @@ class TransactionGraphBuilder:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         torch.save(bundle.pyg_data, output_dir / "pyg_data.pt")
-        nx.write_gpickle(bundle.nx_graph, str(output_dir / "nx_graph.gpickle"))
+
+        # nx.write_gpickle was removed in NetworkX 3.0 — use stdlib pickle
+        with open(output_dir / "nx_graph.pkl", "wb") as f:
+            pickle.dump(bundle.nx_graph, f)
 
         with open(output_dir / "account_to_idx.pkl", "wb") as f:
             pickle.dump(bundle.account_to_idx, f)
@@ -219,8 +226,15 @@ class TransactionGraphBuilder:
     @staticmethod
     def load(output_dir: Path) -> GraphBundle:
         """Load a previously saved graph bundle."""
-        pyg_data = torch.load(output_dir / "pyg_data.pt")
-        nx_graph = nx.read_gpickle(str(output_dir / "nx_graph.gpickle"))
+        # weights_only=False required for PyTorch 2.6+ when loading non-tensor objects
+        pyg_data = torch.load(output_dir / "pyg_data.pt", weights_only=False)
+
+        # Support both old (.gpickle) and new (.pkl) filenames
+        nx_path = output_dir / "nx_graph.pkl"
+        if not nx_path.exists():
+            nx_path = output_dir / "nx_graph.gpickle"
+        with open(nx_path, "rb") as f:
+            nx_graph = pickle.load(f)
 
         with open(output_dir / "account_to_idx.pkl", "rb") as f:
             account_to_idx = pickle.load(f)

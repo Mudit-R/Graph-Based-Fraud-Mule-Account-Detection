@@ -120,7 +120,7 @@ def train_xgboost(
             "colsample_bytree": 0.8,
             "min_child_weight": 5,
             "eval_metric": "aucpr",
-            "use_label_encoder": False,
+            # use_label_encoder removed in XGBoost 2.0
             "random_state": 42,
             "n_jobs": -1,
         }
@@ -131,7 +131,6 @@ def train_xgboost(
             X_train, y_train,
             eval_set=[(X_test, y_test)],
             verbose=100,
-            early_stopping_rounds=30,
         )
         y_proba = model.predict_proba(X_test)[:, 1]
 

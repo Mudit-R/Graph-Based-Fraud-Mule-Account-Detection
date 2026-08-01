@@ -18,6 +18,8 @@ import time
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Type
 
+import os
+os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
 import mlflow
 import numpy as np
 import torch
@@ -116,6 +118,7 @@ class GNNTrainer:
 
         if num_neighbors is None:
             num_neighbors = [25, 10, 5]  # 3 layers
+        self.num_neighbors = num_neighbors
 
         self.criterion = FocalLoss(alpha=focal_alpha, gamma=focal_gamma)
 
@@ -124,7 +127,7 @@ class GNNTrainer:
         )
         self.scheduler = ReduceLROnPlateau(
             self.optimizer, mode="max", factor=0.5,
-            patience=7, verbose=True
+            patience=7
         )
 
         # NeighborLoader for mini-batch training
@@ -165,18 +168,30 @@ class GNNTrainer:
 
     @torch.no_grad()
     def evaluate(self, mask: torch.Tensor) -> Tuple[float, np.ndarray]:
-        """Full-graph inference on masked nodes, returns (pr_auc, proba)."""
+        """Mini-batch evaluation using NeighborLoader to prevent CUDA Out of Memory."""
         self.model.eval()
-        # Full graph forward pass (fine for eval — no gradient needed)
-        logits = self.model(
-            self.data.x.to(self.device),
-            self.data.edge_index.to(self.device),
+        mask_ids = mask.nonzero(as_tuple=True)[0]
+        eval_loader = NeighborLoader(
+            self.data,
+            num_neighbors=self.num_neighbors,
+            batch_size=1024,
+            input_nodes=mask_ids,
+            shuffle=False,
+            num_workers=0,
         )
-        proba = torch.sigmoid(logits).cpu().numpy()
-        y_true = self.data.y.cpu().numpy()
+        probas_list = []
+        y_true_list = []
+        for batch in eval_loader:
+            batch = batch.to(self.device)
+            logits = self.model(batch.x, batch.edge_index)
+            out = logits[:batch.batch_size]
+            p = torch.sigmoid(out).cpu().numpy()
+            probas_list.append(p)
+            y_true_list.append(batch.y[:batch.batch_size].cpu().numpy())
 
-        mask_np = mask.cpu().numpy()
-        pr_auc = average_precision_score(y_true[mask_np], proba[mask_np])
+        proba = np.concatenate(probas_list)
+        y_true = np.concatenate(y_true_list)
+        pr_auc = float(average_precision_score(y_true, proba))
         return pr_auc, proba
 
     def fit(self, experiment_name: str, model_name: str) -> Dict:
@@ -232,7 +247,7 @@ class GNNTrainer:
                         break
 
             # Load best and evaluate on test
-            self.model.load_state_dict(torch.load(best_checkpoint))
+            self.model.load_state_dict(torch.load(best_checkpoint, weights_only=True))
             _, test_proba = self.evaluate(torch.ones(self.data.num_nodes, dtype=torch.bool))
 
             # Compute final metrics

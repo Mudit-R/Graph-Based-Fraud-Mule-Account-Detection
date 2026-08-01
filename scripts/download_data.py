@@ -49,24 +49,33 @@ def download(output_dir: Path) -> None:
             f"Original error: {e}"
         ) from e
 
-    logger.info(f"Downloading {DATASET_SLUG} from Kaggle …")
-    os.system(
-        f"kaggle datasets download -d {DATASET_SLUG} -p {output_dir} --unzip"
-    )
+    logger.info(f"Downloading {DATASET_SLUG} from Kaggle API (with automatic retries) …")
+    from kaggle.api.kaggle_api_extended import KaggleApi
+    api = KaggleApi()
+    api.authenticate()
+    
+    max_retries = 5
+    for attempt in range(1, max_retries + 1):
+        try:
+            logger.info(f"Download attempt {attempt}/{max_retries} …")
+            api.dataset_download_files(DATASET_SLUG, path=str(output_dir), unzip=True)
+            break
+        except Exception as e:
+            logger.warning(f"Attempt {attempt} failed: {e}")
+            if attempt == max_retries:
+                raise
+            time.sleep(3)
 
     if csv_path.exists():
         size_mb = csv_path.stat().st_size / 1e6
-        logger.success(f"Downloaded: {csv_path} ({size_mb:.1f} MB)")
+        logger.success(f"PaySim dataset ready at {csv_path} ({size_mb:.1f} MB)")
     else:
-        # Some Kaggle datasets zip with different filenames — find the CSV
-        csvs = list(output_dir.glob("*.csv"))
-        if csvs:
-            logger.info(f"Found CSV: {csvs[0]}")
+        # Check if CSV exists with slightly different filename
+        csv_files = list(output_dir.glob("*.csv"))
+        if csv_files:
+            logger.success(f"Found CSV: {csv_files[0]}")
         else:
-            raise FileNotFoundError(
-                f"Download succeeded but CSV not found in {output_dir}. "
-                "Check Kaggle dataset structure."
-            )
+            raise FileNotFoundError(f"Download completed but no CSV found in {output_dir}")
 
 
 def main() -> None:

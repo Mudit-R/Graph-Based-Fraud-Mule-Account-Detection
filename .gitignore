@@ -12,9 +12,11 @@ build/
 # ── Virtual environments ──────────────────────────────────────────────────────
 .env
 .venv
+venv_new/
 env/
 venv/
 ENV/
+mlflow.db
 
 # ── Jupyter ───────────────────────────────────────────────────────────────────
 .ipynb_checkpoints/
