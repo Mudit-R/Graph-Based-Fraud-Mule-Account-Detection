@@ -1,12 +1,10 @@
 /**
- * Production Fraud Intelligence Dashboard Application Logic
- * Integrates live FastAPI endpoints (/health, /predict, /cache/seed-gnn-scores)
- * with an interactive Canvas Subgraph Visualizer.
+ * Fraud Guard 3D — Production Financial Intelligence Platform
+ * Powered by Three.js WebGL Spatial Rendering, Orbit Controls & Live FastAPI endpoints.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // ── State & Elements ────────────────────────────────────────────────────────
   const API_BASE_URL = window.location.origin.includes('8000') 
     ? window.location.origin 
     : 'http://localhost:8000';
@@ -89,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (display) display.textContent = v;
     }
 
-    // Trigger score calculation automatically on preset switch
     submitScoringForm();
   }
 
@@ -142,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const degRatio = parseFloat(document.getElementById('degree_ratio').value);
     const pr = parseFloat(document.getElementById('pagerank').value);
 
-    // Build complete 22-feature AccountFeatures object
     const payload = {
       account_id: accountId,
       total_sent_log: 12.5,
@@ -184,23 +180,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       renderScoreResult(data);
+      update3DNodeState(accountId, data);
     } catch (err) {
-      // Fallback calculation for offline presentation
       const mockProb = Math.min(0.99, Math.max(0.01, 0.4 * balanceDrain + 0.3 * nightTx + 0.2 * (spike / 10.0)));
-      renderScoreResult({
+      const result = {
         account_id: accountId,
         fraud_probability: Math.round(mockProb * 10000) / 10000,
         is_flagged: mockProb >= 0.50,
         risk_tier: mockProb >= 0.80 ? 'CRITICAL' : (mockProb >= 0.50 ? 'HIGH' : (mockProb >= 0.20 ? 'MEDIUM' : 'LOW')),
         cache_hit: true,
-        gnn_nearline_score: mockProb > 0.70 ? 0.94 : null,
+        gnn_nearline_score: mockProb > 0.70 ? 0.982 : null,
         scoring_latency_ms: 0.82,
         top_contributing_features: [
           { "balance_drain_ratio": balanceDrain },
           { "night_tx_fraction": nightTx },
           { "amount_spike_ratio": spike }
         ]
-      });
+      };
+      renderScoreResult(result);
+      update3DNodeState(accountId, result);
     } finally {
       if (submitBtn) {
         submitBtn.innerHTML = `<i class="fa-solid fa-microchip"></i> Calculate Real-Time Risk Score`;
@@ -223,7 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (accountResultId) accountResultId.textContent = data.account_id;
     if (probValText) probValText.textContent = `${probPct}%`;
 
-    // Conic gradient color selection based on risk tier
     let color = 'var(--status-low)';
     if (data.risk_tier === 'CRITICAL') color = 'var(--status-critical)';
     else if (data.risk_tier === 'HIGH') color = 'var(--status-high)';
@@ -298,109 +295,310 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ── Interactive Subgraph Canvas Visualizer ─────────────────────────────────
-  const canvas = document.getElementById('graphCanvas');
-  if (canvas) {
-    const ctx = canvas.getContext('2d');
-    let width = canvas.width = canvas.parentElement.clientWidth;
-    let height = canvas.height = canvas.parentElement.clientHeight;
+  // ── Three.js 3D WebGL Engine & Spatial Visualizer ────────────────────────────
+  const container = document.getElementById('threeCanvas');
+  let scene, camera, renderer, controls;
+  let nodeMeshes = [];
+  let edgeArcs = [];
+  let particles = [];
+  let haloMesh = null;
+  let raycaster, mouse;
 
-    window.addEventListener('resize', () => {
-      width = canvas.width = canvas.parentElement.clientWidth;
-      height = canvas.height = canvas.parentElement.clientHeight;
-      drawGraph();
-    });
+  const nodeData = [
+    { id: 'C_MULE_8841', type: 'mule', pos: new THREE.Vector3(0, 0, 0), radius: 2.2, color: 0xef4444, risk: 0.982, deg: '48 / 3', att: '0.9420', pr: '0.0085' },
+    { id: 'C_SRC_101', type: 'source', pos: new THREE.Vector3(-14, 8, -5), radius: 1.5, color: 0x06b6d4, risk: 0.120, deg: '12 / 0', att: '0.1200', pr: '0.0004' },
+    { id: 'C_SRC_102', type: 'source', pos: new THREE.Vector3(-14, -8, 5), radius: 1.5, color: 0x06b6d4, risk: 0.150, deg: '18 / 0', att: '0.1800', pr: '0.0006' },
+    { id: 'C_RELAY_401', type: 'relay', pos: new THREE.Vector3(-6, 2, -10), radius: 1.6, color: 0x8b5cf6, risk: 0.640, deg: '8 / 4', att: '0.6200', pr: '0.0032' },
+    { id: 'C_EXIT_901', type: 'exit', pos: new THREE.Vector3(14, 8, 5), radius: 1.6, color: 0x10b981, risk: 0.920, deg: '1 / 25', att: '0.8900', pr: '0.0120' },
+    { id: 'C_EXIT_902', type: 'exit', pos: new THREE.Vector3(14, -8, -5), radius: 1.6, color: 0x10b981, risk: 0.880, deg: '1 / 30', att: '0.8500', pr: '0.0110' }
+  ];
 
-    const nodes = [
-      { id: 'Source_A', type: 'source', x: width * 0.18, y: height * 0.35, label: 'C_SRC_101', risk: 0.10 },
-      { id: 'Source_B', type: 'source', x: width * 0.18, y: height * 0.65, label: 'C_SRC_102', risk: 0.15 },
-      { id: 'Mule_Bridge', type: 'mule', x: width * 0.50, y: height * 0.50, label: 'C_MULE_8841', risk: 0.98 },
-      { id: 'Exit_X', type: 'exit', x: width * 0.82, y: height * 0.35, label: 'C_EXIT_901', risk: 0.92 },
-      { id: 'Exit_Y', type: 'exit', x: width * 0.82, y: height * 0.65, label: 'C_EXIT_902', risk: 0.88 }
-    ];
+  const edgeData = [
+    { from: nodeData[1], to: nodeData[3], amount: '$15,000' },
+    { from: nodeData[2], to: nodeData[0], amount: '$22,500' },
+    { from: nodeData[3], to: nodeData[0], amount: '$14,200' },
+    { from: nodeData[0], to: nodeData[4], amount: '$26,000' },
+    { from: nodeData[0], to: nodeData[5], amount: '$25,700' }
+  ];
 
-    const edges = [
-      { from: nodes[0], to: nodes[2], amount: '$15,000', weight: 0.85 },
-      { from: nodes[1], to: nodes[2], amount: '$22,500', weight: 0.91 },
-      { from: nodes[2], to: nodes[3], amount: '$18,000', weight: 0.95 },
-      { from: nodes[2], to: nodes[4], amount: '$19,200', weight: 0.94 }
-    ];
+  function init3D() {
+    if (!container || !window.THREE) return;
 
-    let particleOffset = 0;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
 
-    function drawGraph() {
-      ctx.clearRect(0, 0, width, height);
+    // Scene setup
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x060913, 0.015);
 
-      // Draw Edges
-      edges.forEach(edge => {
-        ctx.beginPath();
-        ctx.moveTo(edge.from.x, edge.from.y);
-        ctx.lineTo(edge.to.x, edge.to.y);
-        ctx.strokeStyle = edge.from.type === 'mule' || edge.to.type === 'mule' 
-          ? 'rgba(239, 68, 68, 0.4)' 
-          : 'rgba(6, 182, 212, 0.3)';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([6, 4]);
-        ctx.lineDashOffset = -particleOffset;
-        ctx.stroke();
-        ctx.setLineDash([]);
+    // Camera setup
+    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.set(0, 18, 42);
 
-        // Label on edge
-        const midX = (edge.from.x + edge.to.x) / 2;
-        const midY = (edge.from.y + edge.to.y) / 2;
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '11px JetBrains Mono';
-        ctx.fillText(edge.amount, midX - 18, midY - 8);
-      });
+    // Renderer setup
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    container.appendChild(renderer.domElement);
 
-      // Draw Nodes
-      nodes.forEach(node => {
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.type === 'mule' ? 24 : 18, 0, Math.PI * 2);
-
-        if (node.type === 'mule') {
-          ctx.fillStyle = '#ef4444';
-          ctx.shadowColor = '#ef4444';
-          ctx.shadowBlur = 18;
-        } else if (node.type === 'source') {
-          ctx.fillStyle = '#06b6d4';
-          ctx.shadowColor = '#06b6d4';
-          ctx.shadowBlur = 12;
-        } else {
-          ctx.fillStyle = '#10b981';
-          ctx.shadowColor = '#10b981';
-          ctx.shadowBlur = 12;
-        }
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Node Label
-        ctx.fillStyle = '#f1f5f9';
-        ctx.font = '12px Inter';
-        ctx.textAlign = 'center';
-        ctx.fillText(node.label, node.x, node.y + 36);
-
-        ctx.fillStyle = node.type === 'mule' ? '#ef4444' : '#06b6d4';
-        ctx.font = '10px JetBrains Mono';
-        ctx.fillText(`Risk: ${(node.risk * 100).toFixed(0)}%`, node.x, node.y - 30);
-      });
-
-      particleOffset = (particleOffset + 0.5) % 20;
-      requestAnimationFrame(drawGraph);
+    // Orbit Controls
+    if (window.THREE.OrbitControls) {
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxDistance = 100;
+      controls.minDistance = 10;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.8;
     }
 
-    drawGraph();
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
 
-    // Canvas Reset Button
-    document.getElementById('btnResetGraph')?.addEventListener('click', () => {
-      drawGraph();
+    const dirLight1 = new THREE.DirectionalLight(0x06b6d4, 1.2);
+    dirLight1.position.set(20, 40, 20);
+    scene.add(dirLight1);
+
+    const dirLight2 = new THREE.DirectionalLight(0xef4444, 0.8);
+    dirLight2.position.set(-20, -20, -20);
+    scene.add(dirLight2);
+
+    // Ambient 3D Star Particle Grid
+    createParticleGrid();
+
+    // Render 3D Nodes
+    create3DNodes();
+
+    // Render 3D Bezier Flow Arcs
+    create3DEdges();
+
+    // Raycaster for hover/click interaction
+    raycaster = new THREE.Raycaster();
+    mouse = new THREE.Vector2();
+
+    renderer.domElement.addEventListener('mousemove', on3DMouseMove);
+    renderer.domElement.addEventListener('click', on3DMouseClick);
+
+    window.addEventListener('resize', onWindowResize);
+
+    // Animation Loop
+    animate3D();
+  }
+
+  function createParticleGrid() {
+    const pCount = 400;
+    const pGeo = new THREE.BufferGeometry();
+    const pPos = new Float32Array(pCount * 3);
+
+    for (let i = 0; i < pCount * 3; i += 3) {
+      pPos[i] = (Math.random() - 0.5) * 120;
+      pPos[i + 1] = (Math.random() - 0.5) * 120;
+      pPos[i + 2] = (Math.random() - 0.5) * 120;
+    }
+
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    const pMat = new THREE.PointsMaterial({
+      color: 0x06b6d4,
+      size: 0.6,
+      transparent: true,
+      opacity: 0.3
+    });
+
+    const pMesh = new THREE.Points(pGeo, pMat);
+    scene.add(pMesh);
+  }
+
+  function create3DNodes() {
+    nodeData.forEach(n => {
+      const geo = new THREE.SphereGeometry(n.radius, 32, 32);
+      const mat = new THREE.MeshPhongMaterial({
+        color: n.color,
+        emissive: n.color,
+        emissiveIntensity: n.type === 'mule' ? 0.7 : 0.3,
+        shininess: 80,
+        transparent: true,
+        opacity: 0.95
+      });
+
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(n.pos);
+      mesh.userData = n;
+      scene.add(mesh);
+      nodeMeshes.push(mesh);
+
+      // Mule Account Glowing Outer Halo
+      if (n.type === 'mule') {
+        const haloGeo = new THREE.RingGeometry(n.radius * 1.3, n.radius * 1.6, 32);
+        const haloMat = new THREE.MeshBasicMaterial({
+          color: 0xef4444,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.6
+        });
+        haloMesh = new THREE.Mesh(haloGeo, haloMat);
+        haloMesh.position.copy(n.pos);
+        scene.add(haloMesh);
+      }
     });
   }
 
-  // Initial trigger for preset
+  function create3DEdges() {
+    edgeData.forEach(e => {
+      const p1 = e.from.pos;
+      const p2 = e.to.pos;
+
+      // Calculate 3D Quadratic Bezier Arc Control Point
+      const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+      mid.y += 4.0; // Elevate curve in Y axis
+
+      const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
+      const points = curve.getPoints(50);
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+
+      const isMule = e.from.type === 'mule' || e.to.type === 'mule';
+      const lineMat = new THREE.LineBasicMaterial({
+        color: isMule ? 0xef4444 : 0x06b6d4,
+        transparent: true,
+        opacity: isMule ? 0.6 : 0.35,
+        linewidth: 2
+      });
+
+      const line = new THREE.Line(lineGeo, lineMat);
+      scene.add(line);
+
+      // Traveling Light Particle along Arc
+      const particleGeo = new THREE.SphereGeometry(0.3, 16, 16);
+      const particleMat = new THREE.MeshBasicMaterial({
+        color: isMule ? 0xff0055 : 0x00f2fe
+      });
+      const particleMesh = new THREE.Mesh(particleGeo, particleMat);
+      scene.add(particleMesh);
+
+      particles.push({ mesh: particleMesh, curve: curve, progress: Math.random() });
+    });
+  }
+
+  function animate3D() {
+    requestAnimationFrame(animate3D);
+
+    if (controls) controls.update();
+
+    // Pulse Mule Halo
+    if (haloMesh) {
+      haloMesh.rotation.z += 0.01;
+      const s = 1.0 + Math.sin(Date.now() * 0.003) * 0.15;
+      haloMesh.scale.set(s, s, s);
+    }
+
+    // Animate Edge Energy Particles
+    particles.forEach(p => {
+      p.progress = (p.progress + 0.006) % 1.0;
+      const pos = p.curve.getPoint(p.progress);
+      p.mesh.position.copy(pos);
+    });
+
+    renderer.render(scene, camera);
+  }
+
+  function on3DMouseMove(event) {
+    if (!renderer) return;
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(nodeMeshes);
+
+    if (intersects.length > 0) {
+      renderer.domElement.style.cursor = 'pointer';
+      const data = intersects[0].object.userData;
+      updateHudCard(data);
+    } else {
+      renderer.domElement.style.cursor = 'default';
+    }
+  }
+
+  function on3DMouseClick(event) {
+    if (!renderer) return;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(nodeMeshes);
+
+    if (intersects.length > 0) {
+      const targetPos = intersects[0].object.position;
+      // Lerp camera target
+      if (controls) {
+        controls.target.copy(targetPos);
+      }
+    }
+  }
+
+  function updateHudCard(data) {
+    const idEl = document.getElementById('hudNodeId');
+    const typeEl = document.getElementById('hudNodeType');
+    const riskEl = document.getElementById('hudRiskVal');
+    const degEl = document.getElementById('hudDegreeVal');
+    const attEl = document.getElementById('hudAttentionVal');
+    const prEl = document.getElementById('hudPageRankVal');
+
+    if (idEl) idEl.textContent = data.id;
+    if (typeEl) {
+      typeEl.textContent = `${data.type.toUpperCase()} NODE`;
+      typeEl.style.color = data.type === 'mule' ? 'var(--status-critical)' : 'var(--accent-cyan)';
+    }
+    if (riskEl) riskEl.textContent = `${(data.risk * 100).toFixed(1)}%`;
+    if (degEl) degEl.textContent = data.deg;
+    if (attEl) attEl.textContent = data.att;
+    if (prEl) prEl.textContent = data.pr;
+  }
+
+  function update3DNodeState(accountId, result) {
+    const targetNode = nodeMeshes.find(m => m.userData.id === accountId || m.userData.id === 'C_MULE_8841');
+    if (targetNode) {
+      targetNode.userData.risk = result.fraud_probability;
+      updateHudCard(targetNode.userData);
+
+      if (controls && result.is_flagged) {
+        controls.target.copy(targetNode.position);
+      }
+    }
+  }
+
+  function onWindowResize() {
+    if (!container || !renderer || !camera) return;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+  }
+
+  // 3D Viewport Controls Toolbar Handlers
+  document.getElementById('btnToggleOrbit')?.addEventListener('click', function() {
+    if (controls) {
+      controls.autoRotate = !controls.autoRotate;
+      this.classList.toggle('active', controls.autoRotate);
+    }
+  });
+
+  document.getElementById('btnFocusMule')?.addEventListener('click', () => {
+    if (controls) {
+      controls.target.set(0, 0, 0);
+      camera.position.set(0, 10, 28);
+    }
+  });
+
+  document.getElementById('btnResetCamera')?.addEventListener('click', () => {
+    if (controls) {
+      controls.target.set(0, 0, 0);
+      camera.position.set(0, 18, 42);
+    }
+  });
+
+  // Initialize 3D WebGL Engine
+  init3D();
+
+  // Load Initial Preset
   loadPreset('mule');
 });
