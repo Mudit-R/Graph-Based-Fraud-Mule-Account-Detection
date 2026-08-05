@@ -387,6 +387,63 @@
         </div>
       </section>
 
+      <!-- ── Panel 4: Why Hybrid GAT + XGBoost Beats Standalone XGBoost ───── -->
+      <section class="panel-card" style="grid-column: span 2;">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <i class="fa-solid fa-lightbulb" style="color: var(--status-med);"></i>
+            Technical Deep Dive: Why Hybrid GAT + XGBoost Beats Standalone XGBoost
+          </h2>
+          <span class="status-badge" style="background: var(--status-low-bg); color: var(--status-low); border: 1px solid var(--status-low);">
+            Production System Architecture
+          </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+
+          <!-- Card 1 -->
+          <div style="background: rgba(10, 13, 20, 0.7); border: 1px solid var(--bg-card-border); border-top: 3px solid var(--accent-cyan); border-radius: var(--radius-md); padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="font-size: 15px; font-weight: 700; color: var(--accent-cyan);">
+                <i class="fa-solid fa-shield-virus"></i> 1. Maximum Total Fraud Capture (Recall)
+              </h3>
+              <span style="font-family: var(--font-mono); font-size: 12px; color: var(--status-low); font-weight: 700;">86.07% vs 83.43%</span>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+              In banking and AML compliance, <strong>missed fraud (False Negatives)</strong> is the most expensive operational risk. Mule accounts intentionally maintain normal-looking balance profiles to bypass tabular rules. Adding GAT graph attention embeddings recovers <strong>hidden mule rings</strong> that standalone XGBoost completely misses.
+            </p>
+          </div>
+
+          <!-- Card 2 -->
+          <div style="background: rgba(10, 13, 20, 0.7); border: 1px solid var(--bg-card-border); border-top: 3px solid var(--accent-blue); border-radius: var(--radius-md); padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="font-size: 15px; font-weight: 700; color: var(--accent-blue);">
+                <i class="fa-solid fa-diagram-project"></i> 2. High-Order Relational Feature (P_GAT)
+              </h3>
+              <span style="font-family: var(--font-mono); font-size: 12px; color: var(--accent-blue); font-weight: 700;">ROC-AUC 0.9129</span>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+              Tree models only make orthogonal splits on single continuous variables (e.g. <code>balance_drain &gt; 0.98</code>). GAT computes multi-hop attention weights ($\alpha_{ij}$) across complex transaction paths, compressing global network topology into a single feature $P_{\text{GAT}}$ fed directly into XGBoost.
+            </p>
+          </div>
+
+          <!-- Card 3 -->
+          <div style="background: rgba(10, 13, 20, 0.7); border: 1px solid var(--bg-card-border); border-top: 3px solid var(--accent-purple); border-radius: var(--radius-md); padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="font-size: 15px; font-weight: 700; color: var(--accent-purple);">
+                <i class="fa-solid fa-scale-balanced"></i> 3. Focal Loss Probability Calibration
+              </h3>
+              <span style="font-family: var(--font-mono); font-size: 12px; color: var(--accent-purple); font-weight: 700;">Precision@100 = 75%</span>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+              Standalone GNNs trained with Focal Loss suffer from probability output compression, hurting standalone threshold precision. Stacking $P_{\text{GAT}}$ into XGBoost calibrates probability scores while maintaining <strong>75% Precision@100</strong> for manual investigation alert budgets.
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+
     </main>
 
     <!-- ── Footer ─────────────────────────────────────────────────────────── -->
