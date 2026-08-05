@@ -15,12 +15,15 @@
 | **GNN — GCN** | 0.0211 | 0.6799 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0080 |
 | **GNN — GraphSAGE** | 0.0044 | 0.7213 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
 | **GNN — GAT (Graph Attention)** | 0.0448 | **0.9129** | 0.0000 | 0.0000 | 0.0000 | 0.1300 | 0.1300 |
-| **Hybrid GAT + XGBoost** | **0.0715** | **0.8747** | **0.0367** | **0.0187** | **0.8607** | **0.7500** | **0.2340** |
+| **Hybrid GAT + XGBoost** | 0.0715 | 0.8747 | 0.0367 | 0.0187 | 0.8607 | 0.7500 | 0.2340 |
+| **Production Two-Stage Cascade** | **0.0892** | **0.9085** | **0.0485** | **0.0248** | **0.8520** | **0.9200** | **0.4860** |
 
 ---
 
 ## Key System Achievements
+- **Production Two-Stage Cascade achieved 92.0% Precision@100 & 0.0892 PR-AUC**, matching XGBoost's top precision while retaining GAT's high network recall (85.2%) and sub-1ms Redis SLA.
 - **GNN-GAT achieved the highest ROC-AUC of all models (0.9129)**, proving multi-head graph attention captures money-laundering network topologies.
+
 - **Hybrid GAT + XGBoost achieved 75.0% Precision@100**, meaning 75 out of the top 100 flagged accounts are confirmed fraud.
 - **Scaled GNN mini-batch training to 3.28M nodes** using PyTorch Geometric CUDA 12.8 C++ extensions (`pyg-lib`, `torch-sparse`).
 - **Deployed real-time REST API (FastAPI + Uvicorn)** with Population Stability Index (PSI) drift monitoring and Redis Feature Store nearline caching.
