@@ -94,6 +94,9 @@ class FraudPrediction(BaseModel):
     risk_tier: str  # "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
     top_contributing_features: List[Dict[str, float]]
     model_version: str
+    cache_hit: bool = Field(False, description="True if GNN score was retrieved from nearline Redis cache")
+    gnn_nearline_score: Optional[float] = Field(None, description="Pre-computed nearline GNN risk score if available")
+    scoring_latency_ms: float = Field(0.0, description="Exact inference & scoring latency in milliseconds")
 
 
 class BatchScoreResponse(BaseModel):
@@ -105,6 +108,7 @@ class BatchScoreResponse(BaseModel):
     model_version: str
     drift_psi: Optional[float] = None
     drift_alert: bool = False
+    cache_hits: int = Field(0, description="Total nearline GNN cache hits in batch")
 
 
 class HealthResponse(BaseModel):
@@ -113,4 +117,19 @@ class HealthResponse(BaseModel):
     model_loaded: bool
     model_version: str
     gpu_available: bool
+    redis_connected: bool = Field(False, description="Status of Redis feature store connection")
     uptime_seconds: float
+
+
+class CacheSeedRequest(BaseModel):
+    """Request model for batch seeding GNN risk scores into Redis."""
+    scores: Dict[str, float] = Field(..., description="Map of account_id to pre-computed GNN risk score")
+    ttl_seconds: int = Field(86400, ge=1, description="Cache Time-To-Live in seconds (default 24h)")
+
+
+class CacheSeedResponse(BaseModel):
+    """Response model for GNN score caching pipeline."""
+    seeded_count: int
+    redis_connected: bool
+    ttl_seconds: int
+

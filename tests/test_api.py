@@ -1,7 +1,7 @@
 """
 tests/test_api.py
 ──────────────────────────────────────────────────────────────────────────────
-Integration tests for the FastAPI fraud detection endpoints.
+Integration tests for the FastAPI fraud detection, Redis feature store, and metrics endpoints.
 """
 from __future__ import annotations
 
@@ -57,6 +57,7 @@ class TestHealthEndpoint:
         assert "model_loaded" in data
         assert "model_version" in data
         assert "gpu_available" in data
+        assert "redis_connected" in data
         assert "uptime_seconds" in data
 
     def test_health_uptime_positive(self, client):
@@ -78,6 +79,8 @@ class TestPredictEndpoint:
         assert "risk_tier" in data
         assert "top_contributing_features" in data
         assert "model_version" in data
+        assert "cache_hit" in data
+        assert "scoring_latency_ms" in data
 
     def test_predict_probability_range(self, client):
         data = client.post("/predict", json=EXAMPLE_ACCOUNT).json()
@@ -96,8 +99,58 @@ class TestPredictEndpoint:
         data = client.post("/predict", json=EXAMPLE_ACCOUNT).json()
         prob = data["fraud_probability"]
         is_flagged = data["is_flagged"]
-        # is_flagged should be True iff prob >= 0.5
         assert is_flagged == (prob >= 0.5)
+
+
+class TestCacheEndpoints:
+
+    def test_seed_gnn_scores(self, client):
+        payload = {
+            "scores": {
+                "C_TEST_001": 0.95,
+                "C_TEST_002": 0.12
+            },
+            "ttl_seconds": 3600
+        }
+        response = client.post("/cache/seed-gnn-scores", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["seeded_count"] == 2
+        assert data["ttl_seconds"] == 3600
+
+    def test_predict_uses_cached_gnn_score(self, client):
+        # Seed score 0.98 for C_TEST_CACHE
+        acc = dict(EXAMPLE_ACCOUNT, account_id="C_TEST_CACHE")
+        client.post("/cache/seed-gnn-scores", json={"scores": {"C_TEST_CACHE": 0.98}})
+
+        response = client.post("/predict", json=acc)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["cache_hit"] is True
+        assert data["gnn_nearline_score"] == 0.98
+
+    def test_feature_store_read_write(self, client):
+        acc_id = "C_FEAT_TEST_001"
+        acc = dict(EXAMPLE_ACCOUNT, account_id=acc_id)
+
+        # Write features
+        post_resp = client.post(f"/cache/features/{acc_id}", json=acc)
+        assert post_resp.status_code == 200
+        assert post_resp.json()["saved"] is True
+
+        # Read features
+        get_resp = client.get(f"/cache/features/{acc_id}")
+        assert get_resp.status_code == 200
+        feats = get_resp.json()["features"]
+        assert feats["balance_drain_ratio"] == 0.95
+
+
+class TestMetricsEndpoint:
+
+    def test_metrics_returns_200(self, client):
+        response = client.get("/metrics")
+        assert response.status_code == 200
+        assert "fraud_api_requests_total" in response.text or "prometheus" in response.text
 
 
 class TestBatchScoreEndpoint:
