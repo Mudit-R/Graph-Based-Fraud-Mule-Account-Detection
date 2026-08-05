@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fraud Guard — Graph ML & Redis Mule Detection Platform</title>
+  <meta name="description" content="Production Graph Machine Learning & Redis Feature Store platform for detecting mule accounts and transaction fraud rings in 6.36M+ transaction networks.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- ── Header & Navbar ────────────────────────────────────────────────── -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-diagram-project"></i>
+        </div>
+        <div>
+          <h1 class="brand-title">FRAUD GUARD GNN</h1>
+          <p class="brand-subtitle">Graph ML & Redis Nearline Feature Store Engine</p>
+        </div>
+      </div>
+
+      <div class="header-status-group">
+        <div class="status-badge" id="apiStatusBadge">
+          <div class="pulse-dot" id="apiPulse"></div>
+          <span id="apiStatusText">Connecting to API…</span>
+        </div>
+
+        <div class="status-badge" id="redisStatusBadge">
+          <i class="fa-solid fa-server" style="color: var(--accent-cyan);"></i>
+          <span id="redisStatusText">Redis: Checking…</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Hero Banner Metrics ────────────────────────────────────────────── -->
+    <section class="metrics-banner">
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>TARGET LATENCY SLA</span>
+          <i class="fa-solid fa-bolt" style="color: var(--accent-cyan);"></i>
+        </div>
+        <div class="metric-value">&lt; 15 ms</div>
+        <div class="metric-sub">Sub-1ms Nearline Redis Cache</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>GRAPH NETWORK SCALE</span>
+          <i class="fa-solid fa-network-wired" style="color: var(--accent-blue);"></i>
+        </div>
+        <div class="metric-value">3.28M</div>
+        <div class="metric-sub">Nodes & 2.77M Directed Edges</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>ROC-AUC BENCHMARK</span>
+          <i class="fa-solid fa-chart-line" style="color: var(--accent-purple);"></i>
+        </div>
+        <div class="metric-value">0.9129</div>
+        <div class="metric-sub">GAT Multi-Head Attention</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>PRECISION @ 100</span>
+          <i class="fa-solid fa-bullseye" style="color: var(--status-low);"></i>
+        </div>
+        <div class="metric-value">0.7500</div>
+        <div class="metric-sub">Hybrid Stacking Ensemble</div>
+      </div>
+    </section>
+
+    <!-- ── Main Grid Layout ───────────────────────────────────────────────── -->
+    <main class="dashboard-grid">
+
+      <!-- ── Panel 1: Real-Time Account Investigator ─────────────────────── -->
+      <section class="panel-card" id="investigatorPanel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <i class="fa-solid fa-user-shield"></i>
+            Real-Time Account Risk Investigator
+          </h2>
+          <span class="status-badge" style="font-size: 11px;">POST /predict</span>
+        </div>
+
+        <!-- Presets -->
+        <div class="preset-group">
+          <span style="font-size: 12px; color: var(--text-secondary); align-self: center;">Preset Scenarios:</span>
+          <button class="preset-btn active" id="presetMule">
+            <i class="fa-solid fa-triangle-exclamation" style="color: var(--status-critical);"></i> Mule Account
+          </button>
+          <button class="preset-btn" id="presetRetail">
+            <i class="fa-solid fa-shield-check" style="color: var(--status-low);"></i> Legitimate Retail
+          </button>
+          <button class="preset-btn" id="presetVelocity">
+            <i class="fa-solid fa-bolt-lightning" style="color: var(--status-med);"></i> Velocity Spike
+          </button>
+        </div>
+
+        <!-- Form Inputs -->
+        <form id="scoringForm" class="form-grid">
+
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label" for="account_id">
+              <span>Account Identifier</span>
+              <span class="form-value-display" id="val_account_id">C_MULE_8841</span>
+            </label>
+            <input type="text" id="account_id" class="form-input" value="C_MULE_8841" required>
+          </div>
+
+          <!-- Feature Sliders / Inputs -->
+          <div class="form-group">
+            <label class="form-label" for="balance_drain_ratio">
+              <span>Balance Drain Ratio</span>
+              <span class="form-value-display" id="val_balance_drain">0.98</span>
+            </label>
+            <input type="range" id="balance_drain_ratio" min="0" max="1" step="0.01" value="0.98">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="night_tx_fraction">
+              <span>Night Tx Fraction</span>
+              <span class="form-value-display" id="val_night_tx">0.85</span>
+            </label>
+            <input type="range" id="night_tx_fraction" min="0" max="1" step="0.01" value="0.85">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="tx_velocity_24h">
+              <span>24h Tx Velocity</span>
+              <span class="form-value-display" id="val_tx_velocity">48</span>
+            </label>
+            <input type="range" id="tx_velocity_24h" min="0" max="100" step="1" value="48">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="amount_spike_ratio">
+              <span>Amount Spike Ratio</span>
+              <span class="form-value-display" id="val_amount_spike">4.50</span>
+            </label>
+            <input type="range" id="amount_spike_ratio" min="0" max="10" step="0.1" value="4.5">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="degree_ratio">
+              <span>Out/In Degree Ratio</span>
+              <span class="form-value-display" id="val_degree_ratio">16.0</span>
+            </label>
+            <input type="range" id="degree_ratio" min="0.1" max="50" step="0.5" value="16.0">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="pagerank">
+              <span>Graph PageRank</span>
+              <span class="form-value-display" id="val_pagerank">0.0085</span>
+            </label>
+            <input type="range" id="pagerank" min="0.0001" max="0.05" step="0.0005" value="0.0085">
+          </div>
+
+          <div class="form-group" style="grid-column: span 2;">
+            <button type="submit" class="submit-btn" id="scoreSubmitBtn">
+              <i class="fa-solid fa-microchip"></i> Calculate Real-Time Risk Score
+            </button>
+          </div>
+        </form>
+
+        <!-- Scoring Output Result -->
+        <div class="result-card" id="scoringResultCard">
+          <div class="result-header-row">
+            <div class="prob-meter-container">
+              <div class="prob-circle" id="probCircle">
+                <span class="prob-value-text" id="probValText">94.2%</span>
+              </div>
+              <div>
+                <div style="font-size: 12px; color: var(--text-secondary); font-weight: 500;">PREDICTED FRAUD PROBABILITY</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin-top: 2px;" id="accountResultId">C_MULE_8841</div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+              <span class="risk-badge CRITICAL" id="riskBadge">CRITICAL</span>
+              <div style="font-size: 11px; color: var(--text-secondary);" id="cacheHitText">
+                <i class="fa-solid fa-bolt" style="color: var(--accent-cyan);"></i> Nearline Cache Hit (< 1ms)
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 12px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">
+              TOP SHAP / FEATURE CONTRIBUTIONS
+            </div>
+            <div class="feature-importance-list" id="featureImportanceList">
+              <!-- Dynamically Populated -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Panel 2: Interactive Subgraph & Cache Seeder ───────────────── -->
+      <section class="panel-card" id="graphPanel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <i class="fa-solid fa-circle-nodes"></i>
+            Mule Network Subgraph Visualizer
+          </h2>
+          <span class="status-badge" style="font-size: 11px;">GNN Attention α_ij</span>
+        </div>
+
+        <!-- Canvas -->
+        <div class="canvas-container">
+          <canvas id="graphCanvas"></canvas>
+          <div class="canvas-controls">
+            <button class="canvas-btn" id="btnZoomIn" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
+            <button class="canvas-btn" id="btnZoomOut" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+            <button class="canvas-btn" id="btnResetGraph" title="Reset Network"><i class="fa-solid fa-arrows-rotate"></i></button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary);">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--status-critical); display: inline-block;"></span>
+            Flagged Mule Node
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-cyan); display: inline-block;"></span>
+            Source Account
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--status-low); display: inline-block;"></span>
+            Legitimate Node
+          </div>
+        </div>
+
+        <!-- Redis Cache Seeder Action -->
+        <div style="background: rgba(10, 13, 20, 0.6); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">
+              <i class="fa-solid fa-database" style="color: var(--accent-cyan); margin-right: 6px;"></i> Nearline Redis GNN Score Seeder
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+              Simulate nightly GNN batch pipeline populating 1,000 node risk scores into Redis (<1ms SLA).
+            </div>
+          </div>
+          <button class="preset-btn active" id="btnSeedRedis" style="padding: 10px 16px;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Seed Redis Cache
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ── Panel 3: Benchmark Comparison Table ────────────────────────── -->
+      <section class="panel-card" style="grid-column: span 2;">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <i class="fa-solid fa-ranking-star"></i>
+            Comprehensive Model Benchmark & Architecture Comparison
+          </h2>
+          <span class="status-badge">PaySim 6.36M Test Benchmark</span>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="benchmark-table">
+            <thead>
+              <tr>
+                <th>MODEL STRATEGY</th>
+                <th>PR-AUC</th>
+                <th>ROC-AUC</th>
+                <th>F1-SCORE</th>
+                <th>PRECISION@100</th>
+                <th>PRECISION@500</th>
+                <th>OPERATIONAL LATENCY</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Logistic Regression</td>
+                <td>0.0715</td>
+                <td>0.6948</td>
+                <td>0.0172</td>
+                <td>0.0100</td>
+                <td>0.4620</td>
+                <td>&lt; 2 ms</td>
+              </tr>
+              <tr>
+                <td>LightGBM Baseline</td>
+                <td>0.0106</td>
+                <td>0.6754</td>
+                <td>0.0188</td>
+                <td>0.0200</td>
+                <td>0.5140</td>
+                <td>&lt; 5 ms</td>
+              </tr>
+              <tr>
+                <td>XGBoost (22 Features)</td>
+                <td>0.0861</td>
+                <td>0.8725</td>
+                <td>0.0364</td>
+                <td>0.9200</td>
+                <td>0.2580</td>
+                <td>&lt; 8 ms</td>
+              </tr>
+              <tr>
+                <td>GNN — GCN (Isotropic)</td>
+                <td>0.0211</td>
+                <td>0.6799</td>
+                <td>0.0000</td>
+                <td>0.0000</td>
+                <td>0.0080</td>
+                <td>~ 80 ms</td>
+              </tr>
+              <tr>
+                <td>GNN — GraphSAGE</td>
+                <td>0.0044</td>
+                <td>0.7213</td>
+                <td>0.0000</td>
+                <td>0.0000</td>
+                <td>0.0000</td>
+                <td>~ 65 ms</td>
+              </tr>
+              <tr>
+                <td>GNN — GAT (Attention)</td>
+                <td>0.0448</td>
+                <td><strong>0.9129</strong></td>
+                <td>0.0000</td>
+                <td>0.1300</td>
+                <td>0.1300</td>
+                <td>~ 110 ms</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong>Hybrid GAT + XGBoost (Production)</strong></td>
+                <td><strong>0.0715</strong></td>
+                <td><strong>0.8747</strong></td>
+                <td><strong>0.0367</strong></td>
+                <td><strong>0.7500</strong></td>
+                <td><strong>0.2340</strong></td>
+                <td><strong>&lt; 15 ms (Redis Cache)</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+    <footer class="footer">
+      <p>Graph-Based Fraud & Mule Account Detection Platform &bull; Built with PyTorch Geometric, FastAPI, Redis 7 & XGBoost</p>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

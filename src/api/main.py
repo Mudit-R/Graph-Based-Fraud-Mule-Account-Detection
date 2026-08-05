@@ -35,6 +35,9 @@ import numpy as np
 import torch
 from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+
 from loguru import logger
 
 from src.api.schemas import (
@@ -218,6 +221,19 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+WEB_DIR = Path("web")
+if WEB_DIR.exists():
+    app.mount("/dashboard", StaticFiles(directory="web", html=True), name="dashboard")
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """Root route — redirects to interactive dashboard if present, else API status."""
+    if WEB_DIR.exists():
+        return RedirectResponse(url="/dashboard/")
+    return {"message": "Fraud Detection API running. Access /dashboard for UI or /docs for OpenAPI specs."}
+
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────

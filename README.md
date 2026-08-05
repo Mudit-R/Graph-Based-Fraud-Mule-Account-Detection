@@ -23,7 +23,9 @@
 - **GNN-GAT achieved the highest ROC-AUC of all models (0.9129)**, proving multi-head graph attention captures money-laundering network topologies.
 - **Hybrid GAT + XGBoost achieved 75.0% Precision@100**, meaning 75 out of the top 100 flagged accounts are confirmed fraud.
 - **Scaled GNN mini-batch training to 3.28M nodes** using PyTorch Geometric CUDA 12.8 C++ extensions (`pyg-lib`, `torch-sparse`).
-- **Deployed real-time REST API (FastAPI + Uvicorn)** with Population Stability Index (PSI) drift monitoring.
+- **Deployed real-time REST API (FastAPI + Uvicorn)** with Population Stability Index (PSI) drift monitoring and Redis Feature Store nearline caching.
+- **Interactive Web Dashboard (`web/`)**: Real-time account risk investigator, mule network canvas graph visualizer, nearline Redis cache seeder, and benchmark metrics UI accessible at `http://localhost:8000/dashboard/`.
+
 
 ---
 
