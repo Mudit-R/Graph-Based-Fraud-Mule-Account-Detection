@@ -1,8 +1,8 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
  * STRIPE RADAR 3D — CLIENT ENGINE (app.js)
- * Dual-Mode Serving: FastAPI + Redis Feature Store & Instant Client-Side ML Engine
- * Three.js 3D WebGL Engine • 2D Topology Sandbox • Live Stream • PSI Drift
+ * Stripe WebGL Mesh Gradient • Dual-Mode ML Serving • Three.js 3D & 2D Topologies
+ * Segmented Needle Gauge (0-99) • Live Payment Stream • PSI Drift Sandbox
  * Enterprise Fintech Design • Zero Emojis
  * ═══════════════════════════════════════════════════════════════════════════════
  */
@@ -16,7 +16,102 @@ document.addEventListener('DOMContentLoaded', () => {
   let isApiOnline = false;
   let isRedisOnline = false;
 
-  // ── 1. Benchmark Preset Scenarios ──────────────────────────────────────────
+  // ── 1. Stripe WebGL Mesh Gradient Canvas Background ────────────────────────
+  function initStripeGradientCanvas() {
+    const canvas = document.getElementById('stripe-gradient-canvas');
+    if (!canvas) return;
+
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) return;
+
+    function resize() {
+      canvas.width = canvas.parentElement.clientWidth * window.devicePixelRatio;
+      canvas.height = canvas.parentElement.clientHeight * window.devicePixelRatio;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const vsSource = `
+      attribute vec2 a_position;
+      void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+      }
+    `;
+
+    const fsSource = `
+      precision mediump float;
+      uniform vec2 u_resolution;
+      uniform float u_time;
+
+      // Stripe Brand Colors: Blurple, Cyan, Pink, Navy
+      vec3 color1 = vec3(0.039, 0.145, 0.251); // Navy #0a2540
+      vec3 color2 = vec3(0.388, 0.357, 1.000); // Blurple #635bff
+      vec3 color3 = vec3(0.000, 0.831, 1.000); // Cyan #00d4ff
+      vec3 color4 = vec3(1.000, 0.329, 0.690); // Pink #ff54b0
+      vec3 color5 = vec3(1.000, 0.820, 0.400); // Gold #ffd166
+
+      void main() {
+        vec2 st = gl_FragCoord.xy / u_resolution.xy;
+        st.x *= u_resolution.x / u_resolution.y;
+
+        float t = u_time * 0.4;
+
+        // Wave equations simulating moving gradient mesh
+        float w1 = sin(st.x * 2.0 + t * 0.8) + cos(st.y * 1.5 + t * 0.5);
+        float w2 = cos(st.x * 1.8 - t * 0.6) + sin(st.y * 2.2 + t * 0.7);
+        float w3 = sin(length(st - vec2(0.8, 0.5)) * 4.0 - t);
+
+        vec3 col = mix(color1, color2, clamp((w1 + 1.0) * 0.5, 0.0, 1.0));
+        col = mix(col, color3, clamp((w2 + 1.0) * 0.35, 0.0, 1.0));
+        col = mix(col, color4, clamp(w3 * 0.4, 0.0, 1.0));
+        col = mix(col, color5, clamp((w1 * w2) * 0.25, 0.0, 1.0));
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    function createShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return shader;
+    }
+
+    const program = gl.createProgram();
+    gl.attachShader(program, createShader(gl, gl.VERTEX_SHADER, vsSource));
+    gl.attachShader(program, createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    const posBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1,  1, -1, -1,  1,
+      -1,  1,  1, -1,  1,  1
+    ]), gl.STATIC_DRAW);
+
+    const aPos = gl.getAttribLocation(program, 'a_position');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    const uRes = gl.getUniformLocation(program, 'u_resolution');
+    const uTime = gl.getUniformLocation(program, 'u_time');
+
+    let startTime = Date.now();
+    function renderGradient() {
+      const elapsed = (Date.now() - startTime) / 1000;
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.uniform1f(uTime, elapsed);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      requestAnimationFrame(renderGradient);
+    }
+    renderGradient();
+  }
+
+  initStripeGradientCanvas();
+
+  // ── 2. Benchmark Preset Scenarios ──────────────────────────────────────────
   const presets = {
     mule: {
       account_id: 'C_MULE_8841',
@@ -90,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // ── 2. Input Slider Bindings ───────────────────────────────────────────────
+  // ── 3. Input Slider Bindings ───────────────────────────────────────────────
   const inputsConfig = [
     { id: 'balance_drain_ratio', disp: 'val_balance_drain' },
     { id: 'night_tx_fraction', disp: 'val_night_tx' },
@@ -152,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
     evaluateRisk();
   });
 
-  // ── 3. Health & Liveness Probe ─────────────────────────────────────────────
+  // ── 4. Health & Liveness Probe ─────────────────────────────────────────────
   async function checkHealth() {
     try {
       const res = await fetch(`${API_BASE_URL}/health`, { signal: AbortSignal.timeout(2000) });
@@ -171,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
   checkHealth();
   setInterval(checkHealth, 12000);
 
-  // ── 4. Real-Time Risk Inference Engine ─────────────────────────────────────
+  // ── 5. Real-Time Risk Inference Engine ─────────────────────────────────────
   async function evaluateRisk(e) {
     if (e) e.preventDefault();
 
@@ -314,12 +409,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // ── 5. Render Stripe Radar Output ─────────────────────────────────────────
+  // ── 6. Render Stripe Radar Output ─────────────────────────────────────────
   function renderDecisionResult(res, feats) {
-    const probPct = (res.fraud_probability * 100).toFixed(1);
     const radarScore = Math.min(99, Math.max(1, Math.round(res.fraud_probability * 99)));
-    const circle = document.getElementById('riskGaugeCircle');
-    const inner = document.getElementById('riskGaugeInner');
     const accId = document.getElementById('resultAccountId');
     const stamp = document.getElementById('resultRiskStamp');
     const latency = document.getElementById('resultLatencyText');
@@ -331,47 +423,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // Hero Preview Card elements
     const heroScoreVal = document.getElementById('heroScoreVal');
     const heroBadge = document.getElementById('heroBadge');
-    const heroScoreCircle = document.getElementById('heroScoreCircle');
+    const heroNeedle = document.getElementById('heroNeedle');
+    const resultNeedle = document.getElementById('resultNeedle');
+    const riskScoreDisplay = document.getElementById('riskScoreDisplay');
 
     if (accId) accId.textContent = res.account_id;
-    if (inner) inner.textContent = radarScore;
-    if (heroScoreVal) heroScoreVal.textContent = radarScore;
+    if (heroScoreVal) heroScoreVal.textContent = `${radarScore} / 99`;
+    if (riskScoreDisplay) riskScoreDisplay.textContent = `${radarScore} / 99`;
 
-    let colorVar = 'var(--stripe-green)';
     let stampClass = 'badge-allowed';
     let stampText = 'ALLOWED';
     let actionText = 'ALLOW';
     let descText = 'Verified customer activity. No elevated friction or 2FA required.';
+    let scoreColor = '#15803d';
 
-    if (res.fraud_probability >= 0.80) {
-      colorVar = 'var(--stripe-coral)';
+    if (res.fraud_probability >= 0.65) {
       stampClass = 'badge-blocked';
       stampText = 'BLOCKED';
       actionText = 'FREEZE ACCOUNT & FILE SAR';
       descText = 'High confidence mule hub detected. Trigger immediate fund hold & SAR report.';
-    } else if (res.fraud_probability >= 0.50) {
-      colorVar = 'var(--stripe-orange)';
+      scoreColor = 'var(--stripe-coral)';
+    } else if (res.fraud_probability >= 0.20) {
       stampClass = 'badge-elevated';
       stampText = 'ELEVATED';
       actionText = 'STEP-UP 2FA & MANUAL REVIEW';
       descText = 'Suspicious velocity surge. Require biometric challenge on next transfer event.';
-    } else if (res.fraud_probability >= 0.20) {
-      colorVar = 'var(--stripe-amber)';
-      stampClass = 'badge-elevated';
-      stampText = 'ELEVATED';
-      actionText = 'WATCHLIST MONITORING';
-      descText = 'Mild structural anomalies. Monitor transactions in 48-hour tracking window.';
+      scoreColor = '#b45309';
     }
 
-    if (circle) {
-      circle.style.background = `conic-gradient(${colorVar} 0deg ${probPct * 3.6}deg, #edf2f7 ${probPct * 3.6}deg 360deg)`;
-      circle.style.boxShadow = `0 0 16px ${colorVar}40`;
+    if (heroNeedle) {
+      heroNeedle.style.left = `${radarScore}%`;
+      heroNeedle.style.borderColor = scoreColor;
     }
 
-    if (heroScoreCircle) {
-      heroScoreCircle.style.background = `conic-gradient(${colorVar} 0deg ${probPct * 3.6}deg, #edf2f7 ${probPct * 3.6}deg 360deg)`;
-      heroScoreCircle.style.boxShadow = `0 0 16px ${colorVar}40`;
+    if (resultNeedle) {
+      resultNeedle.style.left = `${radarScore}%`;
+      resultNeedle.style.borderColor = scoreColor;
     }
+
+    if (heroScoreVal) heroScoreVal.style.color = scoreColor;
+    if (riskScoreDisplay) riskScoreDisplay.style.color = scoreColor;
 
     if (stamp) {
       stamp.className = `stripe-risk-badge ${stampClass}`;
@@ -415,9 +506,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // AI Reasoning Quote
     if (quote && feats) {
-      if (res.fraud_probability >= 0.80) {
+      if (res.fraud_probability >= 0.65) {
         quote.textContent = `"Identified structural mule signature: Account exhibits ${Math.round(feats.balance_drain_ratio * 100)}% balance drain, an asymmetric out/in degree ratio of ${feats.degree_ratio}, and a ${feats.amount_spike_ratio}x velocity spike over baseline."`;
-      } else if (res.fraud_probability >= 0.50) {
+      } else if (res.fraud_probability >= 0.20) {
         quote.textContent = `"Elevated risk profile detected: Account exhibits ${feats.amount_spike_ratio}x volume burst with ${Math.round(feats.night_tx_fraction * 100)}% off-hours transactions, characteristic of compromised credentials."`;
       } else {
         quote.textContent = `"Legitimate baseline verified: Balanced degree ratio (${feats.degree_ratio}), low drain ratio (${Math.round(feats.balance_drain_ratio * 100)}%), and low network centrality consistent with authentic customer activity."`;
@@ -430,12 +521,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const auditAction = document.getElementById('auditAction');
     const auditTime = document.getElementById('auditTimestamp');
     if (auditAcc) auditAcc.textContent = res.account_id;
-    if (auditRisk) auditRisk.textContent = `${probPct}% (Score: ${radarScore}/99 - ${stampText})`;
+    if (auditRisk) auditRisk.textContent = `${(res.fraud_probability * 100).toFixed(1)}% (Score: ${radarScore}/99 - ${stampText})`;
     if (auditAction) auditAction.textContent = actionText;
     if (auditTime) auditTime.textContent = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
   }
 
-  // ── 6. Redis Seeder Action ─────────────────────────────────────────────────
+  // ── 7. Redis Seeder Action ─────────────────────────────────────────────────
   document.getElementById('btnSeedRedis')?.addEventListener('click', async () => {
     const btn = document.getElementById('btnSeedRedis');
     if (btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Seeding…`;
@@ -464,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ── 7. Three.js 3D WebGL Spatial Graph Engine ──────────────────────────────
+  // ── 8. Three.js 3D WebGL Spatial Graph Engine ──────────────────────────────
   const threeCanvasContainer = document.getElementById('threeCanvas');
   let scene3D, camera3D, renderer3D, controls3D;
   let nodeMeshes3D = [];
@@ -498,7 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const height = threeCanvasContainer.clientHeight || 420;
 
     scene3D = new THREE.Scene();
-    scene3D.fog = new THREE.FogExp2(0x0a1122, 0.012);
+    scene3D.fog = new THREE.FogExp2(0x061727, 0.012);
 
     camera3D = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
     camera3D.position.set(0, 16, 42);
@@ -518,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
       controls3D.minDistance = 10;
     }
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
     scene3D.add(ambient);
 
     const dir1 = new THREE.DirectionalLight(0x00d4ff, 1.2);
@@ -529,13 +620,8 @@ document.addEventListener('DOMContentLoaded', () => {
     dir2.position.set(-20, -20, -20);
     scene3D.add(dir2);
 
-    // Star points
     create3DParticleGrid();
-
-    // Nodes
     create3DNodes();
-
-    // Curved Bezier Edges
     create3DEdges();
 
     raycaster3D = new THREE.Raycaster();
@@ -677,7 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (idEl) idEl.textContent = d.id;
     if (typeEl) {
       typeEl.textContent = d.type.toUpperCase();
-      typeEl.style.color = d.type === 'mule' ? 'var(--stripe-coral)' : 'var(--stripe-blurple)';
+      typeEl.style.color = d.type === 'mule' ? 'var(--stripe-coral)' : 'var(--stripe-cyan)';
     }
     if (riskEl) riskEl.textContent = `${(d.risk * 100).toFixed(1)}%`;
     if (degEl) degEl.textContent = d.deg;
@@ -745,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
     render2DTopology('star');
   });
 
-  // ── 8. 2D Network Topology Sandbox Canvas ──────────────────────────────────
+  // ── 9. 2D Network Topology Sandbox Canvas ──────────────────────────────────
   const canvas2D = document.getElementById('topology2DCanvas');
   let currentTopo = 'star';
   let topoNodes = [];
@@ -913,7 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
     render2DTopology('merchant');
   });
 
-  // ── 9. Live Payment Stream Simulator ───────────────────────────────────────
+  // ── 10. Live Payment Stream Simulator ──────────────────────────────────────
   let streamInterval = null;
   let streamPaused = false;
   let streamTxCount = 1482;
@@ -985,7 +1071,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Traffic surge simulated (20 rapid transactions scored).');
   });
 
-  // ── 10. Population Stability Index (PSI) Drift Monitor ─────────────────────
+  // ── 11. Population Stability Index (PSI) Drift Monitor ─────────────────────
   const psiShiftSlider = document.getElementById('psi_shift_slider');
   const psiSpreadSlider = document.getElementById('psi_spread_slider');
   const psiHistContainer = document.getElementById('psiHistogramBars');
@@ -1075,7 +1161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   calculateAndRenderPSI();
 
-  // ── 11. Modals & Recruiter Clipboard Actions ───────────────────────────────
+  // ── 12. Modals & Recruiter Clipboard Actions ───────────────────────────────
   const modalDossier = document.getElementById('modalDossier');
   const modalAudit = document.getElementById('modalAudit');
 
@@ -1110,7 +1196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ── 12. Toast Notification System ──────────────────────────────────────────
+  // ── 13. Toast Notification System ──────────────────────────────────────────
   function showToast(msg) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -1127,7 +1213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
   }
 
-  // ── 13. Initialize App ─────────────────────────────────────────────────────
+  // ── 14. Initialize App ─────────────────────────────────────────────────────
   init3D();
   selectPreset('mule');
 });

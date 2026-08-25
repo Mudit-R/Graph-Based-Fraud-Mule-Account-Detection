@@ -28,100 +28,125 @@
     <a href="#panelBenchmark">View benchmarks <i class="fa-solid fa-arrow-right"></i></a>
   </div>
 
-  <!-- ── Stripe Tilted Gradient Mesh Canvas ──────────────────────────────────── -->
-  <div class="stripe-gradient-mesh-bg"></div>
-
-  <!-- ── Stripe Navigation Bar ──────────────────────────────────────────────── -->
-  <nav class="stripe-navbar-container">
-    <a href="#" class="stripe-brand">
-      <div class="stripe-logo-glyph">
-        <i class="fa-solid fa-radar"></i>
-      </div>
-      <span class="stripe-brand-text">
-        Radar 3D
-        <span class="stripe-brand-sub">Graph ML</span>
-      </span>
-    </a>
-
-    <ul class="stripe-nav-links">
-      <li><a href="#panelInvestigator">Risk Console</a></li>
-      <li><a href="#panelGraph">3D Topology</a></li>
-      <li><a href="#panelSimulator">Live Events</a></li>
-      <li><a href="#panelBenchmark">Benchmarks</a></li>
-      <li><a href="#panelDrift">ML Drift (PSI)</a></li>
-    </ul>
-
-    <div class="stripe-nav-actions">
-      <button class="stripe-btn btn-blurple" id="btnOpenDossier">
-        Recruiter Dossier <i class="fa-solid fa-arrow-right"></i>
-      </button>
-
-      <button class="stripe-btn btn-white" id="btnExportAudit">
-        <i class="fa-solid fa-print"></i> Export Audit
-      </button>
-
-      <a href="https://github.com/Mudit-R/Graph-Based-Fraud-Mule-Account-Detection" target="_blank" class="stripe-btn btn-outline-navy">
-        <i class="fa-brands fa-github"></i>
-      </a>
-    </div>
-  </nav>
-
-  <!-- ── Stripe Hero Section ────────────────────────────────────────────────── -->
-  <header class="stripe-hero-section">
-    <div class="hero-left-content">
-      <div class="hero-pill-tag">
-        <span class="pill-glow-dot"></span>
-        <span>3,277,509 ACCOUNT NODES &bull; 2.77M EDGES</span>
-      </div>
-
-      <h1 class="hero-main-title">
-        Financial infrastructure & <span class="hero-gradient-text">graph machine learning</span> to detect fraud.
-      </h1>
-
-      <p class="hero-description">
-        Radar 3D uses multi-head graph attention networks across 6.36M transactions and 3.28M bank accounts to detect syndicate money laundering and mule accounts in real time — stopping financial crime before funds exit the network.
-      </p>
-
-      <div class="hero-cta-group">
-        <a href="#panelInvestigator" class="stripe-btn btn-blurple btn-lg">
-          Launch Risk Console <i class="fa-solid fa-arrow-right"></i>
-        </a>
-        <a href="#panelBenchmark" class="stripe-btn btn-white btn-lg">
-          Explore Benchmarks
-        </a>
-      </div>
+  <!-- ── Stripe Hero Section with Skewed WebGL Gradient Mesh ───────────────── -->
+  <div class="stripe-hero-wrapper">
+    
+    <!-- Skewed WebGL Gradient Canvas -->
+    <div class="stripe-skewed-mesh-container">
+      <canvas id="stripe-gradient-canvas"></canvas>
     </div>
 
-    <!-- Floating Stripe Radar Hero Preview Card -->
-    <div class="stripe-radar-hero-card">
-      <div class="hero-card-header">
-        <div class="radar-live-status-row">
-          <span class="pill-glow-dot"></span>
-          <span>LIVE EVALUATION &bull; SUB-15MS SLA</span>
+    <!-- Unskewed Hero Content -->
+    <div class="stripe-hero-unskewed-content">
+      
+      <!-- Navbar -->
+      <nav class="stripe-navbar-container">
+        <a href="#" class="stripe-brand">
+          <div class="stripe-logo-glyph">
+            <i class="fa-solid fa-radar"></i>
+          </div>
+          <span class="stripe-brand-text">
+            Radar 3D
+            <span class="stripe-brand-sub">Graph ML</span>
+          </span>
+        </a>
+
+        <ul class="stripe-nav-links">
+          <li><a href="#panelInvestigator">Risk Console</a></li>
+          <li><a href="#panelGraph">3D Topology</a></li>
+          <li><a href="#panelSimulator">Live Events</a></li>
+          <li><a href="#panelBenchmark">Benchmarks</a></li>
+          <li><a href="#panelDrift">ML Drift (PSI)</a></li>
+        </ul>
+
+        <div class="stripe-nav-actions">
+          <button class="stripe-btn btn-blurple" id="btnOpenDossier">
+            Recruiter Dossier <i class="fa-solid fa-arrow-right"></i>
+          </button>
+
+          <button class="stripe-btn btn-glass" id="btnExportAudit">
+            <i class="fa-solid fa-print"></i> Export Audit
+          </button>
+
+          <a href="https://github.com/Mudit-R/Graph-Based-Fraud-Mule-Account-Detection" target="_blank" class="stripe-btn btn-glass">
+            <i class="fa-brands fa-github"></i>
+          </a>
         </div>
-        <span class="stripe-risk-badge badge-blocked" id="heroBadge">BLOCKED</span>
-      </div>
+      </nav>
 
-      <div class="radar-score-display-cluster">
-        <div class="radar-hero-score-circle" id="heroScoreCircle">
-          <div class="radar-score-inner-val">
-            <span id="heroScoreVal">98</span>
-            <span style="font-size: 8px; color: var(--stripe-muted);">/ 99</span>
+      <!-- Hero Grid -->
+      <header class="stripe-hero-grid">
+        <div class="hero-left-content">
+          <div class="hero-pill-tag">
+            <span class="pill-glow-dot"></span>
+            <span>3,277,509 ACCOUNT NODES &bull; 2.77M EDGES</span>
+          </div>
+
+          <h1 class="hero-main-title">
+            Financial infrastructure & <span class="hero-gradient-text">graph machine learning</span> to detect fraud.
+          </h1>
+
+          <p class="hero-description">
+            Radar 3D uses multi-head graph attention networks across 6.36M transactions and 3.28M bank accounts to detect syndicate money laundering and mule accounts in real time — stopping financial crime before funds exit the network.
+          </p>
+
+          <div class="hero-cta-group">
+            <a href="#panelInvestigator" class="stripe-btn btn-blurple btn-lg">
+              Launch Risk Console <i class="fa-solid fa-arrow-right"></i>
+            </a>
+            <a href="#panelBenchmark" class="stripe-btn btn-glass btn-lg">
+              Explore Benchmarks
+            </a>
           </div>
         </div>
-        <div class="radar-score-hero-info">
-          <span style="font-size: 11px; font-weight: 700; color: var(--stripe-muted); text-transform: uppercase;">MULE RISK PROBABILITY</span>
-          <span style="font-family: var(--font-mono); font-weight: 700; color: var(--stripe-navy); font-size: 16px;">C_MULE_8841</span>
-          <span style="font-size: 12px; color: var(--stripe-slate);">98% Balance Drain &bull; Degree Ratio 16.0 &bull; Redis Hit (0.82ms)</span>
-        </div>
-      </div>
 
-      <div style="background: var(--stripe-bg-light); border: 1px solid var(--stripe-border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
-        <span style="color: var(--stripe-slate);">Action: <strong>FREEZE ACCOUNT & FILE SAR</strong></span>
-        <span style="font-family: var(--font-mono); color: var(--stripe-blurple); font-weight: 600;">GAT + XGBoost Consensus</span>
-      </div>
+        <!-- Floating Stripe Radar Hero Preview Card -->
+        <div class="stripe-radar-hero-card">
+          <div class="hero-card-header">
+            <div class="radar-live-status-row">
+              <span class="pill-glow-dot"></span>
+              <span>RADAR RISK SCORE EVALUATION</span>
+            </div>
+            <span class="stripe-risk-badge badge-blocked" id="heroBadge">BLOCKED</span>
+          </div>
+
+          <!-- Segmented Radar Score Meter -->
+          <div class="radar-segmented-score-container">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--stripe-muted); text-transform: uppercase;">MULE RISK PROBABILITY</span>
+              <span style="font-family: var(--font-mono); font-weight: 800; font-size: 22px; color: var(--stripe-coral);" id="heroScoreVal">98 / 99</span>
+            </div>
+
+            <div class="radar-segmented-track">
+              <div class="radar-needle-marker" id="heroNeedle" style="left: 98%;"></div>
+            </div>
+
+            <div class="radar-scale-labels">
+              <span style="color: #15803d;">Normal (0-20)</span>
+              <span style="color: #b45309;">Elevated (21-65)</span>
+              <span style="color: var(--stripe-coral);">High Risk (66-99)</span>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--stripe-border-subtle); padding-bottom: 6px;">
+              <span style="color: var(--stripe-muted);">Account ID</span>
+              <span style="font-family: var(--font-mono); font-weight: 700; color: var(--stripe-navy);">C_MULE_8841</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--stripe-border-subtle); padding-bottom: 6px;">
+              <span style="color: var(--stripe-muted);">Serving Latency</span>
+              <span style="font-family: var(--font-mono); color: var(--stripe-teal); font-weight: 600;">0.82 ms (Redis Cache Hit)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--stripe-muted);">Automated Action</span>
+              <span style="font-weight: 700; color: var(--stripe-coral);">Freeze Account & File SAR</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
     </div>
-  </header>
+  </div>
 
   <!-- ── Key Metrics Bento Strip ────────────────────────────────────────────── -->
   <section class="stripe-metrics-grid">
@@ -350,21 +375,29 @@
         </div>
 
         <div class="stripe-result-box" id="resultDecisionBox">
-          <div class="result-hero-row">
-            <div style="display: flex; align-items: center; gap: 16px;">
-              <div class="radar-circle-meter" id="riskGaugeCircle">
-                <div class="radar-circle-inner">
-                  <span id="riskGaugeInner">98</span>
-                  <span style="font-size: 8px; color: var(--stripe-muted);">/ 99</span>
-                </div>
-              </div>
+          
+          <!-- Segmented Radar Score Meter in Result Box -->
+          <div class="radar-segmented-score-container">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
               <div>
-                <div style="font-size: 11px; font-weight: 700; color: var(--stripe-muted); text-transform: uppercase;">RADAR RISK SCORE</div>
+                <span style="font-size: 11px; font-weight: 700; color: var(--stripe-muted); text-transform: uppercase;">RADAR RISK SCORE</span>
                 <div style="font-family: var(--font-mono); font-size: 16px; font-weight: 800; color: var(--stripe-navy);" id="resultAccountId">C_MULE_8841</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-family: var(--font-mono); font-weight: 800; font-size: 24px; color: var(--stripe-coral);" id="riskScoreDisplay">98 / 99</span>
+                <span class="stripe-risk-badge badge-blocked" id="resultRiskStamp">BLOCKED</span>
               </div>
             </div>
 
-            <div class="stripe-risk-badge badge-blocked" id="resultRiskStamp">BLOCKED</div>
+            <div class="radar-segmented-track">
+              <div class="radar-needle-marker" id="resultNeedle" style="left: 98%;"></div>
+            </div>
+
+            <div class="radar-scale-labels">
+              <span style="color: #15803d;">Normal (0-20)</span>
+              <span style="color: #b45309;">Elevated (21-65)</span>
+              <span style="color: var(--stripe-coral);">High Risk (66-99)</span>
+            </div>
           </div>
 
           <div class="action-banner-row" id="resultActionBox">
@@ -405,12 +438,12 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════════════════
-         PANEL 2: 3D Spatial Radar Visualizer & 2D AML Topologies
+         PANEL 2: 3D Spatial Visualizer & 2D AML Topologies (Dark Section)
          ═══════════════════════════════════════════════════════════════════════ -->
-    <section class="stripe-card-container" id="panelGraph">
-      <div class="card-title-bar">
-        <h2 class="card-title">
-          <i class="fa-solid fa-diagram-project" style="color: var(--stripe-blurple);"></i>
+    <section class="stripe-dark-section" id="panelGraph">
+      <div class="card-title-bar" style="border-bottom-color: rgba(255, 255, 255, 0.15);">
+        <h2 class="card-title" style="color: #ffffff;">
+          <i class="fa-solid fa-diagram-project" style="color: var(--stripe-cyan);"></i>
           Mule Network Topology & Spatial Visualizer
         </h2>
         
@@ -431,45 +464,45 @@
 
           <!-- Floating 3D Node Telemetry HUD -->
           <div class="webgl-hud-card" id="nodeHudOverlay">
-            <div style="font-weight: 700; font-size: 13px; border-bottom: 1px solid var(--stripe-border); padding-bottom: 6px; margin-bottom: 6px; display: flex; justify-content: space-between;">
-              <span id="hudNodeId" style="color: var(--stripe-navy);">C_MULE_8841</span>
+            <div style="font-weight: 700; font-size: 13px; border-bottom: 1px solid rgba(255, 255, 255, 0.15); padding-bottom: 6px; margin-bottom: 6px; display: flex; justify-content: space-between;">
+              <span id="hudNodeId" style="color: #ffffff;">C_MULE_8841</span>
               <span style="color: var(--stripe-coral); font-family: var(--font-mono); font-weight: 700;" id="hudNodeType">MULE HUB</span>
             </div>
             <div style="display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); font-size: 11px;">
               <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--stripe-muted);">Risk Score:</span>
+                <span style="color: #94a3b8;">Risk Score:</span>
                 <strong style="color: var(--stripe-coral);" id="hudRiskVal">98.2%</strong>
               </div>
               <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--stripe-muted);">In / Out Deg:</span>
-                <span id="hudDegVal">3 / 48</span>
+                <span style="color: #94a3b8;">In / Out Deg:</span>
+                <span id="hudDegVal" style="color: #ffffff;">3 / 48</span>
               </div>
               <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--stripe-muted);">GAT Attn α_ij:</span>
-                <span id="hudAttnVal">0.9420</span>
+                <span style="color: #94a3b8;">GAT Attn α_ij:</span>
+                <span id="hudAttnVal" style="color: var(--stripe-cyan);">0.9420</span>
               </div>
               <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--stripe-muted);">PageRank:</span>
-                <span id="hudPrVal">0.0085</span>
+                <span style="color: #94a3b8;">PageRank:</span>
+                <span id="hudPrVal" style="color: #ffffff;">0.0085</span>
               </div>
             </div>
           </div>
 
           <!-- 3D Controls Cluster -->
           <div class="webgl-controls-overlay">
-            <button class="stripe-btn btn-white" id="btnToggleOrbit" style="padding: 5px 12px; font-size: 11px;">
+            <button class="stripe-btn btn-glass" id="btnToggleOrbit" style="padding: 5px 12px; font-size: 11px;">
               <i class="fa-solid fa-rotate"></i> Auto-Orbit
             </button>
             <button class="stripe-btn btn-blurple" id="btnFocusMule" style="padding: 5px 12px; font-size: 11px;">
               <i class="fa-solid fa-crosshairs"></i> Focus Mule
             </button>
-            <button class="stripe-btn btn-white" id="btnReset3D" style="padding: 5px 12px; font-size: 11px;">
+            <button class="stripe-btn btn-glass" id="btnReset3D" style="padding: 5px 12px; font-size: 11px;">
               <i class="fa-solid fa-arrows-to-eye"></i> Reset
             </button>
           </div>
         </div>
 
-        <div style="display: flex; gap: 16px; font-size: 12px; font-weight: 500; flex-wrap: wrap; margin-top: 14px; color: var(--stripe-slate);">
+        <div style="display: flex; gap: 16px; font-size: 12px; font-weight: 500; flex-wrap: wrap; margin-top: 14px; color: #94a3b8;">
           <div style="display: flex; align-items: center; gap: 6px;">
             <span style="width: 10px; height: 10px; background: var(--stripe-coral); border-radius: 50%; display: inline-block;"></span>
             Identified Mule Account Node
@@ -499,8 +532,8 @@
           </div>
         </div>
 
-        <p style="font-size: 12px; color: var(--stripe-slate); margin-top: 10px;">
-          <i class="fa-solid fa-hand-pointer" style="color: var(--stripe-blurple);"></i> <strong>Interactive:</strong> Click any node in the topology above to inspect its real-time graph centrality and GAT attention score!
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 10px;">
+          <i class="fa-solid fa-hand-pointer" style="color: var(--stripe-cyan);"></i> <strong>Interactive:</strong> Click any node in the topology above to inspect its real-time graph centrality and GAT attention score!
         </p>
       </div>
     </section>
@@ -537,26 +570,26 @@
         </div>
 
         <!-- Telemetry Stats Box -->
-        <div class="stream-telemetry-box">
-          <div class="stream-stat-item">
+        <div class="stream-telemetry-box" style="background: var(--stripe-bg-light); border-color: var(--stripe-border);">
+          <div class="stream-stat-item" style="border-bottom-color: var(--stripe-border);">
             <span style="color: var(--stripe-muted);">STREAM VELOCITY:</span>
             <span id="statVelocity" style="font-family: var(--font-mono); color: var(--stripe-blurple); font-weight: 700;">24 events/sec</span>
           </div>
-          <div class="stream-stat-item">
+          <div class="stream-stat-item" style="border-bottom-color: var(--stripe-border);">
             <span style="color: var(--stripe-muted);">TOTAL PROCESSED:</span>
-            <span id="statTotal" style="font-family: var(--font-mono); font-weight: 700;">1,482 transactions</span>
+            <span id="statTotal" style="font-family: var(--font-mono); font-weight: 700; color: var(--stripe-navy);">1,482 transactions</span>
           </div>
-          <div class="stream-stat-item">
+          <div class="stream-stat-item" style="border-bottom-color: var(--stripe-border);">
             <span style="color: var(--stripe-muted);">BLOCKED MULES / FRAUD:</span>
             <span id="statFlagged" style="font-family: var(--font-mono); color: var(--stripe-coral); font-weight: 700;">14 flagged (0.94%)</span>
           </div>
-          <div class="stream-stat-item">
+          <div class="stream-stat-item" style="border-bottom-color: var(--stripe-border);">
             <span style="color: var(--stripe-muted);">REDIS CACHE HIT RATE:</span>
             <span id="statCacheHit" style="font-family: var(--font-mono); color: var(--stripe-teal); font-weight: 700;">97.4% (&lt;0.8ms read)</span>
           </div>
-          <div class="stream-stat-item">
+          <div class="stream-stat-item" style="border-bottom: none;">
             <span style="color: var(--stripe-muted);">P99 SERVING LATENCY:</span>
-            <span id="statP99" style="font-family: var(--font-mono); font-weight: 700;">1.12 ms (SLA: &lt;15ms)</span>
+            <span id="statP99" style="font-family: var(--font-mono); font-weight: 700; color: var(--stripe-navy);">1.12 ms (SLA: &lt;15ms)</span>
           </div>
         </div>
       </div>
