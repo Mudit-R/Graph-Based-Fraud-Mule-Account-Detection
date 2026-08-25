@@ -14,10 +14,6 @@
   
   <!-- Stripe Design System -->
   <link rel="stylesheet" href="style.css">
-
-  <!-- Three.js 3D WebGL Engine & OrbitControls -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
@@ -43,7 +39,7 @@
       <nav class="stripe-navbar-container">
         <a href="#" class="stripe-brand">
           <div class="stripe-logo-glyph">
-            <i class="fa-solid fa-radar"></i>
+            <i class="fa-solid fa-shield-halved"></i>
           </div>
           <span class="stripe-brand-text">
             Radar 3D
@@ -52,23 +48,22 @@
         </a>
 
         <ul class="stripe-nav-links">
-          <li><a href="#panelInvestigator">Risk Console</a></li>
-          <li><a href="#panelGraph">3D Topology</a></li>
-          <li><a href="#panelSimulator">Live Events</a></li>
+          <li><a href="#panelFeatures">Features</a></li>
+          <li><a href="#panelCode">Developer API</a></li>
           <li><a href="#panelBenchmark">Benchmarks</a></li>
-          <li><a href="#panelDrift">ML Drift (PSI)</a></li>
+          <li><a href="#panelTheory">Architecture</a></li>
         </ul>
 
         <div class="stripe-nav-actions">
-          <button class="stripe-btn btn-blurple" id="btnOpenDossier">
+          <button class="stripe-btn btn-glass" id="btnOpenDossier">
             Recruiter Dossier <i class="fa-solid fa-arrow-right"></i>
           </button>
 
-          <button class="stripe-btn btn-glass" id="btnExportAudit">
-            <i class="fa-solid fa-print"></i> Export Audit
-          </button>
+          <a href="console.html" class="stripe-btn btn-blurple">
+            Launch Console <i class="fa-solid fa-arrow-right"></i>
+          </a>
 
-          <a href="https://github.com/Mudit-R/Graph-Based-Fraud-Mule-Account-Detection" target="_blank" class="stripe-btn btn-glass">
+          <a href="https://github.com/Mudit-R/Graph-Based-Fraud-Mule-Account-Detection" target="_blank" class="stripe-btn btn-glass" title="GitHub Repository">
             <i class="fa-brands fa-github"></i>
           </a>
         </div>
@@ -91,7 +86,7 @@
           </p>
 
           <div class="hero-cta-group">
-            <a href="#panelInvestigator" class="stripe-btn btn-blurple btn-lg">
+            <a href="console.html" class="stripe-btn btn-blurple btn-lg">
               Launch Risk Console <i class="fa-solid fa-arrow-right"></i>
             </a>
             <a href="#panelBenchmark" class="stripe-btn btn-glass btn-lg">
@@ -105,9 +100,16 @@
           <div class="hero-card-header">
             <div class="radar-live-status-row">
               <span class="pill-glow-dot"></span>
-              <span>RADAR RISK SCORE EVALUATION</span>
+              <span>LIVE EVALUATOR DEMO</span>
             </div>
             <span class="stripe-risk-badge badge-blocked" id="heroBadge">BLOCKED</span>
+          </div>
+
+          <!-- Scenario Switcher in Hero Card -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="scenario-pill-btn active" id="heroPresetMule" style="font-size: 11px; padding: 4px 10px;">Mule Hub</button>
+            <button class="scenario-pill-btn" id="heroPresetRetail" style="font-size: 11px; padding: 4px 10px;">Retail</button>
+            <button class="scenario-pill-btn" id="heroPresetVelocity" style="font-size: 11px; padding: 4px 10px;">ATO Surge</button>
           </div>
 
           <!-- Segmented Radar Score Meter -->
@@ -131,22 +133,40 @@
           <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
             <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--stripe-border-subtle); padding-bottom: 6px;">
               <span style="color: var(--stripe-muted);">Account ID</span>
-              <span style="font-family: var(--font-mono); font-weight: 700; color: var(--stripe-navy);">C_MULE_8841</span>
+              <span style="font-family: var(--font-mono); font-weight: 700; color: var(--stripe-navy);" id="heroAccountId">C_MULE_8841</span>
             </div>
             <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--stripe-border-subtle); padding-bottom: 6px;">
               <span style="color: var(--stripe-muted);">Serving Latency</span>
-              <span style="font-family: var(--font-mono); color: var(--stripe-teal); font-weight: 600;">0.82 ms (Redis Cache Hit)</span>
+              <span style="font-family: var(--font-mono); color: var(--stripe-teal); font-weight: 600;">0.82 ms (Redis Hit)</span>
             </div>
             <div style="display: flex; justify-content: space-between;">
               <span style="color: var(--stripe-muted);">Automated Action</span>
-              <span style="font-weight: 700; color: var(--stripe-coral);">Freeze Account & File SAR</span>
+              <span style="font-weight: 700; color: var(--stripe-coral);" id="heroActionText">Freeze Account & File SAR</span>
             </div>
           </div>
+
+          <a href="console.html" class="stripe-btn btn-white" style="width: 100%; justify-content: center; font-size: 13px;">
+            Open in Full Console <i class="fa-solid fa-arrow-right"></i>
+          </a>
         </div>
       </header>
 
     </div>
   </div>
+
+  <!-- ── Technology Proof Bar ───────────────────────────────────────────────── -->
+  <section class="stripe-proof-section">
+    <div class="stripe-proof-bar">
+      <span class="proof-label">ENGINEERED ON PRODUCTION FINTECH ARCHITECTURE:</span>
+      <div class="proof-logos">
+        <span class="proof-badge"><i class="fa-solid fa-fire" style="color: #ee4c2c;"></i> PyTorch Geometric</span>
+        <span class="proof-badge"><i class="fa-solid fa-circle-nodes" style="color: #00d4ff;"></i> NetworkX Graph Engine</span>
+        <span class="proof-badge"><i class="fa-solid fa-server" style="color: #dc2626;"></i> Redis 7 Feature Store</span>
+        <span class="proof-badge"><i class="fa-solid fa-bolt" style="color: #009688;"></i> FastAPI Serving</span>
+        <span class="proof-badge"><i class="fa-solid fa-shield-halved" style="color: #635bff;"></i> FinCEN AML Spec</span>
+      </div>
+    </div>
+  </section>
 
   <!-- ── Key Metrics Bento Strip ────────────────────────────────────────────── -->
   <section class="stripe-metrics-grid">
@@ -156,7 +176,7 @@
       </div>
       <div class="bento-val">0.9129</div>
       <div class="bento-label">GAT Graph Attention ROC-AUC</div>
-      <div class="bento-sub">Multi-head attention prevents node over-smoothing</div>
+      <div class="bento-sub">Multi-head attention learns dynamic edge weights to prevent node over-smoothing.</div>
     </div>
 
     <div class="stripe-bento-card">
@@ -165,7 +185,7 @@
       </div>
       <div class="bento-val">75.0%</div>
       <div class="bento-label">Precision@100 Alert Budget</div>
-      <div class="bento-sub">75 out of top 100 flagged accounts are confirmed fraud</div>
+      <div class="bento-sub">75 out of top 100 flagged accounts are confirmed fraud syndicates.</div>
     </div>
 
     <div class="stripe-bento-card">
@@ -174,7 +194,7 @@
       </div>
       <div class="bento-val">86.1%</div>
       <div class="bento-label">Total Fraud Recall Capture</div>
-      <div class="bento-sub">Captures 86.1% across 6.36M transaction network</div>
+      <div class="bento-sub">Captures 86.1% of fraudulent money laundering volume across 6.36M transactions.</div>
     </div>
 
     <div class="stripe-bento-card">
@@ -183,415 +203,121 @@
       </div>
       <div class="bento-val">&lt; 0.85ms</div>
       <div class="bento-label">Redis Serving Latency SLA</div>
-      <div class="bento-sub">Nearline GNN cache ensures sub-15ms payment gateway SLA</div>
+      <div class="bento-sub">Nearline GNN cache ensures sub-15ms payment gateway SLA compliance.</div>
     </div>
   </section>
 
-  <!-- ── Main Section: Interactive Products ─────────────────────────────────── -->
+  <!-- ── Main Section: Features & Code ──────────────────────────────────────── -->
   <main class="stripe-main-section">
 
     <!-- ═══════════════════════════════════════════════════════════════════════
-         PANEL 1: Real-Time Radar Scoring Console
+         FEATURE BENTO GRID: Complete Platform Capabilities
          ═══════════════════════════════════════════════════════════════════════ -->
-    <section class="stripe-console-grid" id="panelInvestigator">
-      
-      <!-- Left: Interactive Controls -->
-      <div class="stripe-card-container">
-        <div class="card-title-bar">
-          <h2 class="card-title">
-            <i class="fa-solid fa-sliders" style="color: var(--stripe-blurple);"></i>
-            Real-Time Risk Evaluation Console
-          </h2>
-          <span class="stripe-risk-badge badge-allowed" style="font-size: 11px;">POST /predict</span>
-        </div>
-
-        <!-- Scenario Quick-Picks -->
-        <div class="scenario-pill-container">
-          <span style="font-size: 11px; font-weight: 700; color: var(--stripe-muted); text-transform: uppercase;">Benchmark Scenarios:</span>
-          <div class="scenario-pills-row">
-            <button class="scenario-pill-btn active" id="presetMule">
-              Syndicate Mule Hub
-            </button>
-            <button class="scenario-pill-btn" id="presetRetail">
-              Verified Retail
-            </button>
-            <button class="scenario-pill-btn" id="presetVelocity">
-              Velocity Surge (ATO)
-            </button>
-            <button class="scenario-pill-btn" id="presetSmurf">
-              Structuring Smurf Ring
-            </button>
-            <button class="scenario-pill-btn" id="presetMerchant">
-              Merchant Gateway
-            </button>
-          </div>
-        </div>
-
-        <!-- Active Engine Dropdown -->
-        <div class="model-select-wrapper">
-          <span style="font-size: 12px; font-weight: 700; color: var(--stripe-navy);"><i class="fa-solid fa-layer-group"></i> Active Engine:</span>
-          <select id="modelStrategySelect">
-            <option value="hybrid" selected>Hybrid GAT + XGBoost Stacking Ensemble (Production Champion)</option>
-            <option value="cascade">Two-Stage Cascade Consensus (Sub-1ms Redis SLA)</option>
-            <option value="gat">GNN — GAT Multi-Head Attention (ROC-AUC 0.9129)</option>
-            <option value="xgboost">XGBoost Standard (22 Features Baseline)</option>
-            <option value="lightgbm">LightGBM (Histogram-binned Baseline)</option>
-          </select>
-        </div>
-
-        <!-- Account Form Inputs -->
-        <form id="scoringForm" style="display: flex; flex-direction: column; gap: 14px;">
-          
-          <div class="feature-group-box">
-            <div class="feature-group-header">
-              <span><i class="fa-solid fa-id-card"></i> Account Identifier</span>
-              <span class="slider-val">ID TENSOR</span>
-            </div>
-            <div style="padding: 12px 14px;">
-              <input type="text" id="account_id" value="C_MULE_8841" placeholder="e.g. C_MULE_8841" required>
-            </div>
-          </div>
-
-          <div class="feature-group-box">
-            <div class="feature-group-header">
-              <span><i class="fa-solid fa-money-bill-transfer"></i> Balance & Drain Signals</span>
-              <span style="color: var(--stripe-muted); font-size: 11px;">4 Features</span>
-            </div>
-            <div class="feature-group-body">
-              <div class="slider-control-item">
-                <div class="slider-label-row">
-                  <span>Balance Drain Ratio</span>
-                  <span class="slider-val" id="val_balance_drain">0.98</span>
-                </div>
-                <input type="range" id="balance_drain_ratio" min="0" max="1" step="0.01" value="0.98">
-              </div>
-
-              <div class="slider-control-item">
-                <div class="slider-label-row">
-                  <span>Night Tx Fraction (00:00-06:00)</span>
-                  <span class="slider-val" id="val_night_tx">0.85</span>
-                </div>
-                <input type="range" id="night_tx_fraction" min="0" max="1" step="0.01" value="0.85">
-              </div>
-
-              <div class="slider-control-item">
-                <div class="slider-label-row">
-                  <span>Total Sent (Log Scale)</span>
-                  <span class="slider-val" id="val_total_sent">12.8</span>
-                </div>
-                <input type="range" id="total_sent_log" min="0" max="18" step="0.2" value="12.8">
-              </div>
-
-              <div class="slider-control-item">
-                <div class="slider-label-row">
-                  <span>Fraud Tx Type Fraction</span>
-                  <span class="slider-val" id="val_fraud_type">1.00</span>
-                </div>
-                <input type="range" id="fraud_type_fraction" min="0" max="1" step="0.05" value="1.00">
-              </div>
-            </div>
-          </div>
-
-          <div class="feature-group-box">
-            <div class="feature-group-header">
-              <span><i class="fa-solid fa-network-wired"></i> Graph Structural & Topology Centrality</span>
-              <span style="color: var(--stripe-muted); font-size: 11px;">4 Features</span>
-            </div>
-            <div class="feature-group-body">
-              <div class="slider-control-item">
-                <div class="slider-label-row">
-                  <span>Out/In Degree Ratio</span>
-                  <span class="slider-val" id="val_degree_ratio">16.0</span>
-                </div>
-                <input type="range" id="degree_ratio" min="0.1" max="40" step="0.5" value="16.0">
-              </div>
-
-              <div class="slider-control-item">
-                <div class="slider-label-row">
-                  <span>Graph PageRank</span>
-                  <span class="slider-val" id="val_pagerank">0.0085</span>
-                </div>
-                <input type="range" id="pagerank" min="0.0001" max="0.04" step="0.0005" value="0.0085">
-              </div>
-
-              <div class="slider-control-item">
-                <div class="slider-label-row">
-                  <span>K-Core Embeddedness</span>
-                  <span class="slider-val" id="val_k_core">8.0</span>
-                </div>
-                <input type="range" id="k_core_number" min="1" max="25" step="1" value="8">
-              </div>
-
-              <div class="slider-control-item">
-                <div class="slider-label-row">
-                  <span>Local Clustering Coeff</span>
-                  <span class="slider-val" id="val_clustering">0.02</span>
-                </div>
-                <input type="range" id="local_clustering_coefficient" min="0" max="1" step="0.01" value="0.02">
-              </div>
-            </div>
-          </div>
-
-          <div class="feature-group-box">
-            <div class="feature-group-header">
-              <span><i class="fa-solid fa-bolt-lightning"></i> Rolling Velocity Surges</span>
-              <span style="color: var(--stripe-muted); font-size: 11px;">2 Features</span>
-            </div>
-            <div class="feature-group-body">
-              <div class="slider-control-item">
-                <div class="slider-label-row">
-                  <span>24h Tx Velocity</span>
-                  <span class="slider-val" id="val_tx_velocity">48</span>
-                </div>
-                <input type="range" id="tx_velocity_24h" min="0" max="120" step="1" value="48">
-              </div>
-
-              <div class="slider-control-item">
-                <div class="slider-label-row">
-                  <span>24h / 7d Amount Spike</span>
-                  <span class="slider-val" id="val_amount_spike">4.50</span>
-                </div>
-                <input type="range" id="amount_spike_ratio" min="0.1" max="12" step="0.1" value="4.5">
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" class="stripe-btn btn-blurple btn-lg" id="btnCalculateRisk" style="width: 100%; justify-content: center;">
-            <i class="fa-solid fa-microchip"></i> Evaluate Live Radar Risk Score
-          </button>
-        </form>
-      </div>
-
-      <!-- Right: Risk Evaluation Result Console -->
-      <div class="stripe-card-container">
-        <div class="card-title-bar">
-          <h2 class="card-title">
-            <i class="fa-solid fa-radar" style="color: var(--stripe-cyan-text);"></i>
-            Evaluation Output & Attribution
-          </h2>
-          <span style="font-size: 11px; font-family: var(--font-mono); color: var(--stripe-muted);" id="resultLatencyText">
-            <i class="fa-solid fa-bolt" style="color: var(--stripe-teal);"></i> Redis Hit: 0.82 ms
-          </span>
-        </div>
-
-        <div class="stripe-result-box" id="resultDecisionBox">
-          
-          <!-- Segmented Radar Score Meter in Result Box -->
-          <div class="radar-segmented-score-container">
-            <div style="display: flex; justify-content: space-between; align-items: baseline;">
-              <div>
-                <span style="font-size: 11px; font-weight: 700; color: var(--stripe-muted); text-transform: uppercase;">RADAR RISK SCORE</span>
-                <div style="font-family: var(--font-mono); font-size: 16px; font-weight: 800; color: var(--stripe-navy);" id="resultAccountId">C_MULE_8841</div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-family: var(--font-mono); font-weight: 800; font-size: 24px; color: var(--stripe-coral);" id="riskScoreDisplay">98 / 99</span>
-                <span class="stripe-risk-badge badge-blocked" id="resultRiskStamp">BLOCKED</span>
-              </div>
-            </div>
-
-            <div class="radar-segmented-track">
-              <div class="radar-needle-marker" id="resultNeedle" style="left: 98%;"></div>
-            </div>
-
-            <div class="radar-scale-labels">
-              <span style="color: #15803d;">Normal (0-20)</span>
-              <span style="color: #b45309;">Elevated (21-65)</span>
-              <span style="color: var(--stripe-coral);">High Risk (66-99)</span>
-            </div>
-          </div>
-
-          <div class="action-banner-row" id="resultActionBox">
-            <span class="action-tag-pill" id="actionTag">FREEZE ACCOUNT</span>
-            <span id="actionDesc" style="color: var(--stripe-slate);">High confidence mule fan-out detected. Automated fund hold & SAR filing triggered.</span>
-          </div>
-
-          <div class="shap-container">
-            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--stripe-muted);">
-              <i class="fa-solid fa-chart-column"></i> Top Feature Attributions (SHAP Local Impact)
-            </div>
-            <div id="shapBarsList" style="display: flex; flex-direction: column; gap: 8px;">
-              <!-- Populated dynamically via JS -->
-            </div>
-          </div>
-
-          <div class="ai-reasoning-box" id="aiReasoningQuote">
-            "Account exhibits classic mule characteristics: 98% balance drain within 2 hours of receiving funds, asymmetric out/in degree ratio of 16.0, and 4.5x surge over 7-day velocity."
-          </div>
-        </div>
-
-        <!-- Nearline Redis Cache Seeder Action -->
-        <div style="background: var(--stripe-bg-light); border: 1px solid var(--stripe-border); border-radius: var(--radius-sm); padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          <div>
-            <div style="font-weight: 700; font-size: 13px; color: var(--stripe-navy);">
-              <i class="fa-solid fa-server" style="color: var(--stripe-blurple); margin-right: 6px;"></i> Nearline Redis Feature Store
-            </div>
-            <div style="font-size: 12px; color: var(--stripe-muted);">
-              Pre-populates 1,000 risk vectors into Redis to ensure sub-15ms payment SLA.
-            </div>
-          </div>
-          <button class="stripe-btn btn-white" id="btnSeedRedis">
-            <i class="fa-solid fa-cloud-arrow-up"></i> Seed Redis Cache
-          </button>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         PANEL 2: 3D Spatial Visualizer & 2D AML Topologies (Dark Section)
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <section class="stripe-dark-section" id="panelGraph">
-      <div class="card-title-bar" style="border-bottom-color: rgba(255, 255, 255, 0.15);">
-        <h2 class="card-title" style="color: #ffffff;">
-          <i class="fa-solid fa-diagram-project" style="color: var(--stripe-cyan);"></i>
-          Mule Network Topology & Spatial Visualizer
-        </h2>
-        
-        <div class="canvas-tab-bar">
-          <button class="canvas-tab-pill active" id="tab3DView">
-            <i class="fa-solid fa-cube"></i> 3D Spatial View
-          </button>
-          <button class="canvas-tab-pill" id="tab2DView">
-            <i class="fa-solid fa-circle-nodes"></i> 2D Ring Topologies
-          </button>
-        </div>
-      </div>
-
-      <!-- 3D WebGL Graph View -->
-      <div id="view3DContainer">
-        <div class="webgl-container-box">
-          <div id="threeCanvas"></div>
-
-          <!-- Floating 3D Node Telemetry HUD -->
-          <div class="webgl-hud-card" id="nodeHudOverlay">
-            <div style="font-weight: 700; font-size: 13px; border-bottom: 1px solid rgba(255, 255, 255, 0.15); padding-bottom: 6px; margin-bottom: 6px; display: flex; justify-content: space-between;">
-              <span id="hudNodeId" style="color: #ffffff;">C_MULE_8841</span>
-              <span style="color: var(--stripe-coral); font-family: var(--font-mono); font-weight: 700;" id="hudNodeType">MULE HUB</span>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); font-size: 11px;">
-              <div style="display: flex; justify-content: space-between;">
-                <span style="color: #94a3b8;">Risk Score:</span>
-                <strong style="color: var(--stripe-coral);" id="hudRiskVal">98.2%</strong>
-              </div>
-              <div style="display: flex; justify-content: space-between;">
-                <span style="color: #94a3b8;">In / Out Deg:</span>
-                <span id="hudDegVal" style="color: #ffffff;">3 / 48</span>
-              </div>
-              <div style="display: flex; justify-content: space-between;">
-                <span style="color: #94a3b8;">GAT Attn α_ij:</span>
-                <span id="hudAttnVal" style="color: var(--stripe-cyan);">0.9420</span>
-              </div>
-              <div style="display: flex; justify-content: space-between;">
-                <span style="color: #94a3b8;">PageRank:</span>
-                <span id="hudPrVal" style="color: #ffffff;">0.0085</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3D Controls Cluster -->
-          <div class="webgl-controls-overlay">
-            <button class="stripe-btn btn-glass" id="btnToggleOrbit" style="padding: 5px 12px; font-size: 11px;">
-              <i class="fa-solid fa-rotate"></i> Auto-Orbit
-            </button>
-            <button class="stripe-btn btn-blurple" id="btnFocusMule" style="padding: 5px 12px; font-size: 11px;">
-              <i class="fa-solid fa-crosshairs"></i> Focus Mule
-            </button>
-            <button class="stripe-btn btn-glass" id="btnReset3D" style="padding: 5px 12px; font-size: 11px;">
-              <i class="fa-solid fa-arrows-to-eye"></i> Reset
-            </button>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 16px; font-size: 12px; font-weight: 500; flex-wrap: wrap; margin-top: 14px; color: #94a3b8;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="width: 10px; height: 10px; background: var(--stripe-coral); border-radius: 50%; display: inline-block;"></span>
-            Identified Mule Account Node
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="width: 10px; height: 10px; background: var(--stripe-cyan); border-radius: 50%; display: inline-block;"></span>
-            Compromised Source Account
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="width: 10px; height: 10px; background: var(--stripe-teal); border-radius: 50%; display: inline-block;"></span>
-            Cash-Out Exit Gateway
-          </div>
-        </div>
-      </div>
-
-      <!-- 2D Canvas AML Topologies (Hidden by default, toggled via tab) -->
-      <div id="view2DContainer" style="display: none;">
-        <div class="topology-2d-container">
-          <canvas id="topology2DCanvas" width="600" height="420"></canvas>
-
-          <!-- Topology Selector Bar -->
-          <div class="topology-pill-group">
-            <button class="topo-btn active" id="topoStar">1. Mule Star (Fan-In/Out)</button>
-            <button class="topo-btn" id="topoCycle">2. Smurfing Cycle Ring</button>
-            <button class="topo-btn" id="topoBipartite">3. Layering Chain</button>
-            <button class="topo-btn" id="topoMerchant">4. Merchant Cluster</button>
-          </div>
-        </div>
-
-        <p style="font-size: 12px; color: #94a3b8; margin-top: 10px;">
-          <i class="fa-solid fa-hand-pointer" style="color: var(--stripe-cyan);"></i> <strong>Interactive:</strong> Click any node in the topology above to inspect its real-time graph centrality and GAT attention score!
+    <section id="panelFeatures" style="display: flex; flex-direction: column; gap: 20px;">
+      <div class="section-header-block">
+        <span class="section-eyebrow">MODULAR ARCHITECTURE</span>
+        <h2 class="section-title">The complete platform for Graph ML fraud defense</h2>
+        <p class="section-subtitle">
+          Designed from the ground up for high-throughput payment rails. Combining relational graph topology, gradient boosted decision trees, and sub-millisecond feature caching.
         </p>
       </div>
+
+      <div class="stripe-features-bento">
+        <div class="feature-bento-card">
+          <div class="feature-bento-head">
+            <div class="bento-icon-square icon-purple" style="margin-bottom: 0;">
+              <i class="fa-solid fa-brain"></i>
+            </div>
+            <h3 class="feature-bento-title">Multi-Head Graph Attention (GAT)</h3>
+          </div>
+          <p class="feature-bento-body">
+            Unlike standard GCN isotropic averaging, GAT dynamically weighs transaction edges with multi-head attention. It identifies illicit hub routing even when bad actors deliberately disguise behavior with innocent decoy transactions.
+          </p>
+        </div>
+
+        <div class="feature-bento-card">
+          <div class="feature-bento-head">
+            <div class="bento-icon-square icon-teal" style="margin-bottom: 0;">
+              <i class="fa-solid fa-server"></i>
+            </div>
+            <h3 class="feature-bento-title">Dual-Layer Nearline Serving</h3>
+          </div>
+          <p class="feature-bento-body">
+            Live multi-hop GNN message passing is too slow for real-time payment SLAs (>50ms). Radar 3D computes graph embeddings nightly and caches them in a Redis 7 feature store, serving risk scores in under 0.85ms at checkout.
+          </p>
+        </div>
+
+        <div class="feature-bento-card">
+          <div class="feature-bento-head">
+            <div class="bento-icon-square icon-green" style="margin-bottom: 0;">
+              <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+            <h3 class="feature-bento-title">Imbalance-Aware Focal Loss</h3>
+          </div>
+          <p class="feature-bento-body">
+            In extreme 0.25% fraud class imbalance, standard cross-entropy fails. Our Focal Loss objective ($\alpha=0.5, \gamma=2.0$) downweights easy negative gradients by up to 10,000x, forcing the network to focus on evasive mule signatures.
+          </p>
+        </div>
+
+        <div class="feature-bento-card">
+          <div class="feature-bento-head">
+            <div class="bento-icon-square icon-coral" style="margin-bottom: 0;">
+              <i class="fa-solid fa-network-wired"></i>
+            </div>
+            <h3 class="feature-bento-title">22-Dimensional Feature Engine</h3>
+          </div>
+          <p class="feature-bento-body">
+            Combines PageRank centrality, K-core graph decomposition, in/out degree ratios, balance drain speed, night transaction ratios, and 24h/7d velocity surges into a unified feature tensor.
+          </p>
+        </div>
+      </div>
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════════════════
-         PANEL 3: High-Throughput Live Payment Stream
+         INTERACTIVE DEVELOPER API / CODE EXPLORER (Stripe Signature Component)
          ═══════════════════════════════════════════════════════════════════════ -->
-    <section class="stripe-card-container" id="panelSimulator">
+    <section class="stripe-card-container" id="panelCode">
       <div class="card-title-bar">
-        <h2 class="card-title">
-          <i class="fa-solid fa-satellite-dish" style="color: var(--stripe-blurple);"></i>
-          Live Payment Events & Stream Inspector
-        </h2>
-        
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button class="stripe-btn btn-white" id="btnStreamToggle">
-            <i class="fa-solid fa-pause"></i> <span id="streamToggleText">Pause Stream</span>
-          </button>
-          <button class="stripe-btn btn-white" id="btnInjectFraud">
-            <i class="fa-solid fa-triangle-exclamation" style="color: var(--stripe-coral);"></i> Inject High-Risk Wave (6 Tx)
-          </button>
-          <button class="stripe-btn btn-blurple" id="btnSimulateSurge">
-            <i class="fa-solid fa-bolt"></i> Simulate Traffic Surge (20 Tx)
-          </button>
+        <div>
+          <span class="section-eyebrow">DEVELOPER FIRST</span>
+          <h2 class="card-title">
+            <i class="fa-solid fa-terminal" style="color: var(--stripe-blurple);"></i>
+            Instant API Integration & Risk Evaluation
+          </h2>
         </div>
+        <a href="console.html" class="stripe-btn btn-blurple btn-sm">
+          Launch Live Console <i class="fa-solid fa-arrow-right"></i>
+        </a>
       </div>
 
-      <div class="stripe-stream-layout">
-        <!-- Terminal Event Log -->
-        <div class="stripe-terminal-box" id="streamTerminal">
-          <div class="stream-event-row">[SYSTEM] Connected to Radar live payment pipeline...</div>
-          <div class="stream-event-row cache-hit">[REDIS] Feature store connected. Nearline cache hot.</div>
-          <div class="stream-event-row">[PIPELINE] Batch scoring worker online. Target p99 &lt; 15ms.</div>
+      <div class="stripe-code-explorer">
+        <div class="code-header-bar">
+          <div class="code-tabs-group">
+            <button class="code-tab-btn active" id="tabCurl">cURL / REST</button>
+            <button class="code-tab-btn" id="tabPython">Python / PyG</button>
+            <button class="code-tab-btn" id="tabJson">JSON Response</button>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="stripe-btn btn-glass btn-sm" id="btnRunApiDemo">
+              <i class="fa-solid fa-play"></i> Run Request
+            </button>
+            <button class="stripe-btn btn-glass btn-sm" id="btnCopyCode">
+              <i class="fa-solid fa-copy"></i> Copy
+            </button>
+          </div>
         </div>
 
-        <!-- Telemetry Stats Box -->
-        <div class="stream-telemetry-box" style="background: var(--stripe-bg-light); border-color: var(--stripe-border);">
-          <div class="stream-stat-item" style="border-bottom-color: var(--stripe-border);">
-            <span style="color: var(--stripe-muted);">STREAM VELOCITY:</span>
-            <span id="statVelocity" style="font-family: var(--font-mono); color: var(--stripe-blurple); font-weight: 700;">24 events/sec</span>
-          </div>
-          <div class="stream-stat-item" style="border-bottom-color: var(--stripe-border);">
-            <span style="color: var(--stripe-muted);">TOTAL PROCESSED:</span>
-            <span id="statTotal" style="font-family: var(--font-mono); font-weight: 700; color: var(--stripe-navy);">1,482 transactions</span>
-          </div>
-          <div class="stream-stat-item" style="border-bottom-color: var(--stripe-border);">
-            <span style="color: var(--stripe-muted);">BLOCKED MULES / FRAUD:</span>
-            <span id="statFlagged" style="font-family: var(--font-mono); color: var(--stripe-coral); font-weight: 700;">14 flagged (0.94%)</span>
-          </div>
-          <div class="stream-stat-item" style="border-bottom-color: var(--stripe-border);">
-            <span style="color: var(--stripe-muted);">REDIS CACHE HIT RATE:</span>
-            <span id="statCacheHit" style="font-family: var(--font-mono); color: var(--stripe-teal); font-weight: 700;">97.4% (&lt;0.8ms read)</span>
-          </div>
-          <div class="stream-stat-item" style="border-bottom: none;">
-            <span style="color: var(--stripe-muted);">P99 SERVING LATENCY:</span>
-            <span id="statP99" style="font-family: var(--font-mono); font-weight: 700; color: var(--stripe-navy);">1.12 ms (SLA: &lt;15ms)</span>
-          </div>
-        </div>
+        <pre class="code-body-area" id="codeDisplayArea"><code>curl -X POST https://api.radar3d.io/v1/predict \
+  -H "Authorization: Bearer radar_sec_8f92a10" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account_id": "C_MULE_8841",
+    "balance_drain_ratio": 0.98,
+    "night_tx_fraction": 0.85,
+    "degree_ratio": 16.0,
+    "pagerank": 0.0085,
+    "tx_velocity_24h": 48
+  }'</code></pre>
       </div>
     </section>
 
@@ -600,10 +326,13 @@
          ═══════════════════════════════════════════════════════════════════════ -->
     <section class="stripe-card-container" id="panelBenchmark">
       <div class="card-title-bar">
-        <h2 class="card-title">
-          <i class="fa-solid fa-trophy" style="color: var(--stripe-blurple);"></i>
-          Master Model Benchmark Comparison (PaySim 6.36M Real Dataset)
-        </h2>
+        <div>
+          <span class="section-eyebrow">RIGOROUS EMPIRICAL VALIDATION</span>
+          <h2 class="card-title">
+            <i class="fa-solid fa-trophy" style="color: var(--stripe-blurple);"></i>
+            Master Model Benchmark Comparison (PaySim 6.36M Real Dataset)
+          </h2>
+        </div>
         <span class="stripe-risk-badge badge-allowed" style="font-size: 11px;">BENCHMARK VERIFIED</span>
       </div>
 
@@ -785,7 +514,7 @@
       </div>
 
       <!-- Deep Dive Architectural Cards -->
-      <div class="deep-dive-grid">
+      <div class="deep-dive-grid" id="panelTheory">
         <div class="deep-card">
           <h3 class="deep-card-title"><i class="fa-solid fa-brain" style="color: var(--stripe-blurple);"></i> 1. Why GAT Attention Beats Isotropic GCN</h3>
           <p>
@@ -818,84 +547,82 @@
       </div>
     </section>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         PANEL 5: Covariate Drift & PSI Monitor Sandbox
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <section class="stripe-card-container" id="panelDrift">
-      <div class="card-title-bar">
-        <h2 class="card-title">
-          <i class="fa-solid fa-wave-square" style="color: var(--stripe-blurple);"></i>
-          Population Stability Index (PSI) Drift Monitor Sandbox
-        </h2>
-        <span class="stripe-risk-badge badge-allowed" style="font-size: 11px;">src/drift/psi.py</span>
+    <!-- ── Stripe Pre-Footer CTA Banner ──────────────────────────────────────── -->
+    <section class="stripe-cta-banner">
+      <div class="cta-left-content">
+        <h2 class="cta-title">Experience autonomous Graph ML fraud defense in real time.</h2>
+        <p class="cta-desc">
+          Test interactive mule network topologies, 3D WebGL spatial clusters, live payment stream injections, and PSI drift monitoring in the dedicated Radar Console.
+        </p>
       </div>
 
-      <div class="psi-layout-grid">
-        <!-- Shift Slider Box -->
-        <div class="psi-histogram-card">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 700; color: var(--stripe-navy);">Reference (Training) vs Production Distribution</span>
-            <div style="display: flex; gap: 10px; font-size: 11px; font-family: var(--font-mono);">
-              <span style="color: var(--stripe-blurple); font-weight: 600;">■ Reference (Base)</span>
-              <span style="color: var(--stripe-cyan-text); font-weight: 600;">■ Current (Prod)</span>
-            </div>
-          </div>
-
-          <!-- Histogram Bars -->
-          <div class="histogram-visualizer" id="psiHistogramBars">
-            <!-- Rendered dynamically via JS -->
-          </div>
-
-          <!-- Sliders -->
-          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 6px;">
-            <div class="slider-control-item">
-              <div class="slider-label-row">
-                <span>Simulate Production Covariate Shift (Mean Shift)</span>
-                <span class="slider-val" id="val_psi_shift">0.05</span>
-              </div>
-              <input type="range" id="psi_shift_slider" min="0" max="0.6" step="0.02" value="0.05">
-            </div>
-
-            <div class="slider-control-item">
-              <div class="slider-label-row">
-                <span>Simulate Attack Distribution Variance (Spread)</span>
-                <span class="slider-val" id="val_psi_spread">1.0</span>
-              </div>
-              <input type="range" id="psi_spread_slider" min="0.5" max="2.5" step="0.1" value="1.0">
-            </div>
-          </div>
-        </div>
-
-        <!-- PSI Status & Action Box -->
-        <div class="psi-status-card">
-          <div>
-            <span style="font-size: 11px; font-weight: 700; color: var(--stripe-muted); text-transform: uppercase;">CALCULATED POPULATION STABILITY INDEX</span>
-            <div class="psi-score-val">
-              <span id="psiScoreValue">0.042</span>
-              <span class="stripe-risk-badge badge-allowed" id="psiStatusBadge" style="font-size: 12px;">MODEL STABLE</span>
-            </div>
-
-            <p style="font-size: 13px; line-height: 1.5; color: var(--stripe-slate); margin-top: 8px;" id="psiExplanationText">
-              PSI &lt; 0.10: Zero significant covariate drift. Model inference is valid and production-stable.
-            </p>
-          </div>
-
-          <button class="stripe-btn btn-blurple" id="btnTriggerRetrainSim" style="width: 100%; justify-content: center;">
-            <i class="fa-solid fa-arrows-rotate"></i> Simulate Automated Retraining Trigger
-          </button>
-        </div>
+      <div class="cta-actions">
+        <a href="console.html" class="stripe-btn btn-white btn-lg">
+          Launch Radar Console <i class="fa-solid fa-arrow-right"></i>
+        </a>
+        <button class="stripe-btn btn-glass btn-lg" id="btnOpenDossierBottom">
+          View Recruiter Dossier
+        </button>
       </div>
     </section>
 
   </main>
 
-  <!-- ── Footer ───────────────────────────────────────────────────────────── -->
+  <!-- ── Multi-Column Stripe Footer ────────────────────────────────────────── -->
   <footer class="stripe-footer">
-    <div>
-      <strong>Radar 3D</strong> &bull; Autonomous Graph Machine Learning Fraud Defense Platform
+    <div class="footer-inner">
+      <div class="footer-brand-col">
+        <a href="#" class="stripe-brand">
+          <div class="stripe-logo-glyph">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <span class="stripe-brand-text" style="color: var(--stripe-navy);">
+            Radar 3D
+            <span class="stripe-brand-sub" style="background: var(--stripe-blurple-light); color: var(--stripe-blurple);">Graph ML</span>
+          </span>
+        </a>
+        <p style="font-size: 14px; color: var(--stripe-slate); max-width: 320px;">
+          Autonomous graph neural network and stacking ensemble platform for detecting financial crime and money laundering at payment gateway scale.
+        </p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Platform</div>
+        <ul class="footer-links-list">
+          <li><a href="console.html">Risk Console</a></li>
+          <li><a href="console.html#tab-topologies">3D Spatial Topology</a></li>
+          <li><a href="console.html#tab-stream">Live Stream Inspector</a></li>
+          <li><a href="console.html#tab-drift">PSI Drift Sandbox</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Architecture</div>
+        <ul class="footer-links-list">
+          <li><a href="#panelBenchmark">PaySim 6.36M Benchmarks</a></li>
+          <li><a href="#panelTheory">Graph Attention Theory</a></li>
+          <li><a href="#panelTheory">Focal Loss Formulation</a></li>
+          <li><a href="#panelCode">Developer REST API</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Repository & Docs</div>
+        <ul class="footer-links-list">
+          <li><a href="https://github.com/Mudit-R/Graph-Based-Fraud-Mule-Account-Detection" target="_blank">GitHub Repository</a></li>
+          <li><a href="#" id="btnOpenAuditFooter">Export Audit Docket</a></li>
+          <li><a href="#" id="btnOpenDossierFooter">Recruiter Dossier</a></li>
+        </ul>
+      </div>
     </div>
-    <div>
-      Built with <a href="https://pyg.org" target="_blank">PyTorch Geometric</a>, <a href="https://fastapi.tiangolo.com" target="_blank">FastAPI</a>, <a href="https://redis.io" target="_blank">Redis 7</a> & <a href="https://threejs.org" target="_blank">Three.js WebGL</a>
+
+    <div class="footer-bottom-bar">
+      <div>
+        &copy; 2026 Radar 3D &bull; Autonomous Graph Machine Learning Fraud Defense Platform.
+      </div>
+      <div>
+        Built with PyTorch Geometric, FastAPI, Redis 7 & Three.js WebGL.
+      </div>
     </div>
   </footer>
 

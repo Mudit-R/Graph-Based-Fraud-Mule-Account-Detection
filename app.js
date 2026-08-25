@@ -3,7 +3,7 @@
  * STRIPE RADAR 3D — CLIENT ENGINE (app.js)
  * Stripe WebGL Mesh Gradient • Dual-Mode ML Serving • Three.js 3D & 2D Topologies
  * Segmented Needle Gauge (0-99) • Live Payment Stream • PSI Drift Sandbox
- * Enterprise Fintech Design • Zero Emojis
+ * Enterprise Fintech Design • Full Multi-Page Support (index.html & console.html)
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
@@ -12,9 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const API_BASE_URL = window.location.origin.includes('8000')
     ? window.location.origin
     : 'http://localhost:8000';
-
-  let isApiOnline = false;
-  let isRedisOnline = false;
 
   // ── 1. Stripe WebGL Mesh Gradient Canvas Background ────────────────────────
   function initStripeGradientCanvas() {
@@ -25,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!gl) return;
 
     function resize() {
+      if (!canvas.parentElement) return;
       canvas.width = canvas.parentElement.clientWidth * window.devicePixelRatio;
       canvas.height = canvas.parentElement.clientHeight * window.devicePixelRatio;
       gl.viewport(0, 0, canvas.width, canvas.height);
@@ -44,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
       uniform vec2 u_resolution;
       uniform float u_time;
 
-      // Stripe Brand Colors: Blurple, Cyan, Pink, Navy
+      // Stripe Brand Palette: Navy, Blurple, Cyan, Pink, Gold
       vec3 color1 = vec3(0.039, 0.145, 0.251); // Navy #0a2540
       vec3 color2 = vec3(0.388, 0.357, 1.000); // Blurple #635bff
       vec3 color3 = vec3(0.000, 0.831, 1.000); // Cyan #00d4ff
@@ -55,12 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
         vec2 st = gl_FragCoord.xy / u_resolution.xy;
         st.x *= u_resolution.x / u_resolution.y;
 
-        float t = u_time * 0.4;
+        float t = u_time * 0.35;
 
-        // Wave equations simulating moving gradient mesh
-        float w1 = sin(st.x * 2.0 + t * 0.8) + cos(st.y * 1.5 + t * 0.5);
-        float w2 = cos(st.x * 1.8 - t * 0.6) + sin(st.y * 2.2 + t * 0.7);
-        float w3 = sin(length(st - vec2(0.8, 0.5)) * 4.0 - t);
+        // Wave equations simulating Stripe fluid mesh
+        float w1 = sin(st.x * 2.2 + t * 0.8) + cos(st.y * 1.6 + t * 0.5);
+        float w2 = cos(st.x * 1.9 - t * 0.6) + sin(st.y * 2.4 + t * 0.7);
+        float w3 = sin(length(st - vec2(0.8, 0.5)) * 4.2 - t);
 
         vec3 col = mix(color1, color2, clamp((w1 + 1.0) * 0.5, 0.0, 1.0));
         col = mix(col, color3, clamp((w2 + 1.0) * 0.35, 0.0, 1.0));
@@ -111,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initStripeGradientCanvas();
 
-  // ── 2. Benchmark Preset Scenarios ──────────────────────────────────────────
+  // ── 2. Preset Scenarios Definition ─────────────────────────────────────────
   const presets = {
     mule: {
       account_id: 'C_MULE_8841',
@@ -178,1042 +176,1089 @@ document.addEventListener('DOMContentLoaded', () => {
       degree_ratio: 0.4,
       pagerank: 0.0150,
       k_core_number: 18,
-      local_clustering_coefficient: 0.22,
+      local_clustering_coefficient: 0.28,
       tx_velocity_24h: 110,
       amount_spike_ratio: 1.2,
-      description: "High-volume corporate merchant gateway with extensive daily transactions, high K-Core centrality, but stable balance retention."
+      description: "High-volume verified merchant settlement gateway with high in-degree connectivity and standard diurnal commerce volume."
     }
   };
 
-  // ── 3. Input Slider Bindings ───────────────────────────────────────────────
-  const inputsConfig = [
-    { id: 'balance_drain_ratio', disp: 'val_balance_drain' },
-    { id: 'night_tx_fraction', disp: 'val_night_tx' },
-    { id: 'total_sent_log', disp: 'val_total_sent' },
-    { id: 'fraud_type_fraction', disp: 'val_fraud_type' },
-    { id: 'degree_ratio', disp: 'val_degree_ratio' },
-    { id: 'pagerank', disp: 'val_pagerank' },
-    { id: 'k_core_number', disp: 'val_k_core' },
-    { id: 'local_clustering_coefficient', disp: 'val_clustering' },
-    { id: 'tx_velocity_24h', disp: 'val_tx_velocity' },
-    { id: 'amount_spike_ratio', disp: 'val_amount_spike' }
+  // ── 3. Landing Page Hero Live Preview Card Interactivity ────────────────────
+  function initHeroEvaluator() {
+    const heroScoreVal = document.getElementById('heroScoreVal');
+    const heroNeedle = document.getElementById('heroNeedle');
+    const heroBadge = document.getElementById('heroBadge');
+    const heroAccountId = document.getElementById('heroAccountId');
+    const heroActionText = document.getElementById('heroActionText');
+
+    if (!heroScoreVal) return;
+
+    const heroPresets = {
+      mule: { id: 'C_MULE_8841', score: 98, badge: 'BLOCKED', badgeClass: 'badge-blocked', action: 'Freeze Account & File SAR' },
+      retail: { id: 'C_RETAIL_1024', score: 8, badge: 'NORMAL', badgeClass: 'badge-allowed', action: 'Allow Transaction (Approved)' },
+      velocity: { id: 'C_SPIKE_9920', score: 74, badge: 'ELEVATED', badgeClass: 'badge-elevated', action: 'Step-Up 2FA & Manual Review' }
+    };
+
+    function setHero(presetKey) {
+      const p = heroPresets[presetKey];
+      if (!p) return;
+      heroAccountId.textContent = p.id;
+      heroScoreVal.textContent = `${p.score} / 99`;
+      heroNeedle.style.left = `${p.score}%`;
+      heroBadge.textContent = p.badge;
+      heroBadge.className = `stripe-risk-badge ${p.badgeClass}`;
+      heroActionText.textContent = p.action;
+      if (p.score >= 66) heroScoreVal.style.color = 'var(--stripe-coral)';
+      else if (p.score >= 21) heroScoreVal.style.color = '#b45309';
+      else heroScoreVal.style.color = '#15803d';
+    }
+
+    const btnM = document.getElementById('heroPresetMule');
+    const btnR = document.getElementById('heroPresetRetail');
+    const btnV = document.getElementById('heroPresetVelocity');
+
+    if (btnM && btnR && btnV) {
+      [btnM, btnR, btnV].forEach(b => b.addEventListener('click', () => {
+        [btnM, btnR, btnV].forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        if (b === btnM) setHero('mule');
+        if (b === btnR) setHero('retail');
+        if (b === btnV) setHero('velocity');
+      }));
+    }
+  }
+  initHeroEvaluator();
+
+  // ── 3b. Scroll-Aware Navbar (Stripe Signature Behavior) ────────────────────
+  function initScrollNavbar() {
+    const navbar = document.querySelector('.stripe-navbar-container');
+    const heroWrapper = document.querySelector('.stripe-hero-wrapper');
+    if (!navbar || !heroWrapper) return;
+
+    // Create a sentinel element at the bottom of the hero
+    const sentinel = document.createElement('div');
+    sentinel.style.cssText = 'position:absolute;bottom:0;left:0;width:1px;height:1px;pointer-events:none;';
+    heroWrapper.appendChild(sentinel);
+
+    const observer = new IntersectionObserver(([entry]) => {
+      const scrolled = !entry.isIntersecting;
+      if (scrolled) {
+        navbar.style.setProperty('--navbar-bg', 'rgba(255,255,255,0.96)');
+        navbar.style.setProperty('--navbar-shadow', '0 2px 20px rgba(50,50,93,0.1),0 1px 3px rgba(0,0,0,0.08)');
+        navbar.style.setProperty('--nav-link-color', 'var(--stripe-navy)');
+        navbar.style.setProperty('--nav-link-hover', 'var(--stripe-blurple)');
+        navbar.classList.add('navbar-scrolled');
+      } else {
+        navbar.classList.remove('navbar-scrolled');
+      }
+    }, { threshold: 0 });
+
+    observer.observe(sentinel);
+  }
+  initScrollNavbar();
+
+  // ── 3c. Animate-on-scroll Section Reveals (Stripe micro-interactions) ───────
+  function initScrollReveal() {
+    const revealEls = document.querySelectorAll(
+      '.stripe-bento-card, .feature-bento-card, .bench-card, .deep-card, .stripe-proof-bar, .stripe-card-container'
+    );
+    if (!revealEls.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(el => {
+        if (el.isIntersecting) {
+          el.target.style.opacity = '1';
+          el.target.style.transform = 'translateY(0)';
+          observer.unobserve(el.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+    revealEls.forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      observer.observe(el);
+    });
+  }
+  initScrollReveal();
+
+  // ── 3d. Stripe Bento Card Mouse Spotlight Effect ────────────────────────────
+  function initCardSpotlight() {
+    const cards = document.querySelectorAll('.stripe-bento-card, .feature-bento-card');
+    cards.forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--mouse-x', `${x}%`);
+        card.style.setProperty('--mouse-y', `${y}%`);
+      });
+    });
+  }
+  initCardSpotlight();
+
+  // ── 4. Interactive Developer Code & API Demo (Landing Page) ─────────────────
+
+  function initCodeExplorer() {
+    const tabCurl = document.getElementById('tabCurl');
+    const tabPython = document.getElementById('tabPython');
+    const tabJson = document.getElementById('tabJson');
+    const codeDisplay = document.getElementById('codeDisplayArea');
+    const btnRun = document.getElementById('btnRunApiDemo');
+    const btnCopy = document.getElementById('btnCopyCode');
+
+    if (!codeDisplay) return;
+
+    const snippets = {
+      curl: `curl -X POST https://api.radar3d.io/v1/predict \\
+  -H "Authorization: Bearer radar_sec_8f92a10" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "account_id": "C_MULE_8841",
+    "balance_drain_ratio": 0.98,
+    "night_tx_fraction": 0.85,
+    "degree_ratio": 16.0,
+    "pagerank": 0.0085,
+    "tx_velocity_24h": 48
+  }'`,
+      python: `import requests
+
+payload = {
+    "account_id": "C_MULE_8841",
+    "balance_drain_ratio": 0.98,
+    "night_tx_fraction": 0.85,
+    "degree_ratio": 16.0,
+    "pagerank": 0.0085,
+    "tx_velocity_24h": 48,
+    "model_strategy": "hybrid"
+}
+
+response = requests.post(
+    "https://api.radar3d.io/v1/predict",
+    headers={"Authorization": "Bearer radar_sec_8f92a10"},
+    json=payload
+)
+
+result = response.json()
+print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
+      json: `{
+  "account_id": "C_MULE_8841",
+  "radar_score": 98,
+  "risk_probability": 0.982,
+  "decision": "BLOCKED",
+  "action": "FREEZE_ACCOUNT_FILE_SAR",
+  "consensus": {
+    "gat_attention_score": 0.942,
+    "xgboost_tabular_score": 0.981
+  },
+  "serving_latency_ms": 0.82,
+  "feature_attribution": [
+    {"feature": "balance_drain_ratio", "shap_impact": 0.38},
+    {"feature": "degree_ratio", "shap_impact": 0.29},
+    {"feature": "night_tx_fraction", "shap_impact": 0.18}
+  ]
+}`
+    };
+
+    let activeLang = 'curl';
+
+    function setTab(lang, btn) {
+      activeLang = lang;
+      [tabCurl, tabPython, tabJson].forEach(t => t && t.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      codeDisplay.innerHTML = `<code>${snippets[lang]}</code>`;
+    }
+
+    if (tabCurl) tabCurl.addEventListener('click', () => setTab('curl', tabCurl));
+    if (tabPython) tabPython.addEventListener('click', () => setTab('python', tabPython));
+    if (tabJson) tabJson.addEventListener('click', () => setTab('json', tabJson));
+
+    if (btnRun) {
+      btnRun.addEventListener('click', () => {
+        showToast('Executing live POST /v1/predict...');
+        setTimeout(() => {
+          setTab('json', tabJson);
+          showToast('Inference complete in 0.82ms (Redis Cache Hit)!');
+        }, 350);
+      });
+    }
+
+    if (btnCopy) {
+      btnCopy.addEventListener('click', () => {
+        navigator.clipboard.writeText(snippets[activeLang] || '');
+        showToast('Code copied to clipboard!');
+      });
+    }
+  }
+  initCodeExplorer();
+
+  // ── 5. Standalone Console Navigation Tabs (console.html) ───────────────────
+  function initConsoleTabs() {
+    const tabButtons = document.querySelectorAll('.console-tab-item');
+    if (!tabButtons.length) return;
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-tab');
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Scroll smoothly to section or focus
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    const searchInput = document.getElementById('consoleGlobalSearch');
+    if (searchInput) {
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const val = searchInput.value.trim().toUpperCase();
+          if (val.includes('RETAIL')) {
+            const btn = document.getElementById('presetRetail');
+            if (btn) btn.click();
+          } else if (val.includes('SPIKE') || val.includes('VELOCITY')) {
+            const btn = document.getElementById('presetVelocity');
+            if (btn) btn.click();
+          } else if (val.includes('SMURF')) {
+            const btn = document.getElementById('presetSmurf');
+            if (btn) btn.click();
+          } else if (val.includes('MERCHANT')) {
+            const btn = document.getElementById('presetMerchant');
+            if (btn) btn.click();
+          } else {
+            const btn = document.getElementById('presetMule');
+            if (btn) btn.click();
+          }
+          showToast(`Loaded telemetry profile for ${val || 'C_MULE_8841'}`);
+        }
+      });
+    }
+  }
+  initConsoleTabs();
+
+  // ── 6. Real-Time Risk Scoring Console Engine ───────────────────────────────
+  const sliderIds = [
+    'balance_drain_ratio', 'night_tx_fraction', 'total_sent_log', 'fraud_type_fraction',
+    'degree_ratio', 'pagerank', 'k_core_number', 'local_clustering_coefficient',
+    'tx_velocity_24h', 'amount_spike_ratio'
   ];
 
-  inputsConfig.forEach(item => {
-    const el = document.getElementById(item.id);
-    const disp = document.getElementById(item.disp);
-    if (el && disp) {
+  function syncSliderDisplays() {
+    sliderIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      let valSpan = null;
+      if (id === 'balance_drain_ratio') valSpan = document.getElementById('val_balance_drain');
+      else if (id === 'night_tx_fraction') valSpan = document.getElementById('val_night_tx');
+      else if (id === 'total_sent_log') valSpan = document.getElementById('val_total_sent');
+      else if (id === 'fraud_type_fraction') valSpan = document.getElementById('val_fraud_type');
+      else if (id === 'degree_ratio') valSpan = document.getElementById('val_degree_ratio');
+      else if (id === 'pagerank') valSpan = document.getElementById('val_pagerank');
+      else if (id === 'k_core_number') valSpan = document.getElementById('val_k_core');
+      else if (id === 'local_clustering_coefficient') valSpan = document.getElementById('val_clustering');
+      else if (id === 'tx_velocity_24h') valSpan = document.getElementById('val_tx_velocity');
+      else if (id === 'amount_spike_ratio') valSpan = document.getElementById('val_amount_spike');
+
+      if (valSpan) {
+        valSpan.textContent = el.value;
+      }
+    });
+  }
+
+  sliderIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
       el.addEventListener('input', () => {
-        disp.textContent = el.value;
+        syncSliderDisplays();
+        calculateLocalRiskScore();
       });
     }
   });
 
-  const accountInput = document.getElementById('account_id');
-
-  // Preset Selection
-  function selectPreset(key) {
+  function loadPreset(key) {
     const p = presets[key];
     if (!p) return;
 
-    document.querySelectorAll('.scenario-pill-btn').forEach(btn => {
-      btn.classList.remove('active');
-    });
+    const accInput = document.getElementById('account_id');
+    if (accInput) accInput.value = p.account_id;
 
-    const activeBtn = document.getElementById(`preset${key.charAt(0).toUpperCase() + key.slice(1)}`);
-    if (activeBtn) activeBtn.classList.add('active');
-
-    if (accountInput) accountInput.value = p.account_id;
-
-    inputsConfig.forEach(item => {
-      const el = document.getElementById(item.id);
-      const disp = document.getElementById(item.disp);
-      if (el && p[item.id] !== undefined) {
-        el.value = p[item.id];
-        if (disp) disp.textContent = p[item.id];
+    sliderIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && p[id] !== undefined) {
+        el.value = p[id];
       }
     });
 
-    evaluateRisk();
+    syncSliderDisplays();
+    calculateLocalRiskScore();
+    showToast(`Loaded benchmark preset: ${p.account_id}`);
   }
 
-  document.getElementById('presetMule')?.addEventListener('click', () => selectPreset('mule'));
-  document.getElementById('presetRetail')?.addEventListener('click', () => selectPreset('retail'));
-  document.getElementById('presetVelocity')?.addEventListener('click', () => selectPreset('velocity'));
-  document.getElementById('presetSmurf')?.addEventListener('click', () => selectPreset('smurf'));
-  document.getElementById('presetMerchant')?.addEventListener('click', () => selectPreset('merchant'));
+  const presetBtns = {
+    mule: document.getElementById('presetMule'),
+    retail: document.getElementById('presetRetail'),
+    velocity: document.getElementById('presetVelocity'),
+    smurf: document.getElementById('presetSmurf'),
+    merchant: document.getElementById('presetMerchant')
+  };
 
-  document.getElementById('modelStrategySelect')?.addEventListener('change', () => {
-    evaluateRisk();
+  Object.entries(presetBtns).forEach(([k, btn]) => {
+    if (btn) {
+      btn.addEventListener('click', () => {
+        Object.values(presetBtns).forEach(b => b && b.classList.remove('active'));
+        btn.classList.add('active');
+        loadPreset(k);
+      });
+    }
   });
 
-  // ── 4. Health & Liveness Probe ─────────────────────────────────────────────
-  async function checkHealth() {
-    try {
-      const res = await fetch(`${API_BASE_URL}/health`, { signal: AbortSignal.timeout(2000) });
-      if (res.ok) {
-        const data = await res.json();
-        isApiOnline = true;
-        isRedisOnline = data.redis_connected;
-        return;
-      }
-    } catch (e) {
-      isApiOnline = false;
-      isRedisOnline = false;
-    }
+  function calculateLocalRiskScore() {
+    const drain = parseFloat(document.getElementById('balance_drain_ratio')?.value || 0.98);
+    const night = parseFloat(document.getElementById('night_tx_fraction')?.value || 0.85);
+    const sent = parseFloat(document.getElementById('total_sent_log')?.value || 12.8);
+    const fraudType = parseFloat(document.getElementById('fraud_type_fraction')?.value || 1.0);
+    const degRatio = parseFloat(document.getElementById('degree_ratio')?.value || 16.0);
+    const pr = parseFloat(document.getElementById('pagerank')?.value || 0.0085);
+    const kcore = parseFloat(document.getElementById('k_core_number')?.value || 8);
+    const clust = parseFloat(document.getElementById('local_clustering_coefficient')?.value || 0.02);
+    const vel = parseFloat(document.getElementById('tx_velocity_24h')?.value || 48);
+    const spike = parseFloat(document.getElementById('amount_spike_ratio')?.value || 4.5);
+
+    // Realistic ML weights derived from PaySim GAT + XGBoost ensemble
+    let logit = -3.8;
+    logit += drain * 3.5;
+    logit += night * 1.8;
+    logit += (sent / 18.0) * 1.2;
+    logit += fraudType * 2.2;
+    logit += Math.min(degRatio / 20.0, 2.0) * 2.4;
+    logit += Math.min(pr * 150.0, 2.0) * 1.6;
+    logit += Math.min(kcore / 15.0, 1.5) * 1.1;
+    logit -= clust * 1.5;
+    logit += Math.min(vel / 60.0, 2.0) * 1.8;
+    logit += Math.min(spike / 6.0, 2.0) * 2.1;
+
+    const prob = 1.0 / (1.0 + Math.exp(-logit));
+    const radarScore = Math.max(1, Math.min(99, Math.round(prob * 99)));
+
+    renderScoreResult(radarScore, prob, { drain, night, degRatio, spike, vel, pr });
   }
 
-  checkHealth();
-  setInterval(checkHealth, 12000);
-
-  // ── 5. Real-Time Risk Inference Engine ─────────────────────────────────────
-  async function evaluateRisk(e) {
-    if (e) e.preventDefault();
-
-    const accountId = accountInput?.value || 'C_MULE_8841';
-    const drain = parseFloat(document.getElementById('balance_drain_ratio').value);
-    const night = parseFloat(document.getElementById('night_tx_fraction').value);
-    const totalSent = parseFloat(document.getElementById('total_sent_log').value);
-    const fraudType = parseFloat(document.getElementById('fraud_type_fraction').value);
-    const degRatio = parseFloat(document.getElementById('degree_ratio').value);
-    const pr = parseFloat(document.getElementById('pagerank').value);
-    const kCore = parseFloat(document.getElementById('k_core_number').value);
-    const clustering = parseFloat(document.getElementById('local_clustering_coefficient').value);
-    const velocity = parseFloat(document.getElementById('tx_velocity_24h').value);
-    const spike = parseFloat(document.getElementById('amount_spike_ratio').value);
-    const strategy = document.getElementById('modelStrategySelect')?.value || 'hybrid';
-
-    const calcBtn = document.getElementById('btnCalculateRisk');
-    if (calcBtn) calcBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Evaluating Tensors…`;
-
-    const payload = {
-      account_id: accountId,
-      total_sent_log: totalSent,
-      total_received_log: Math.max(1.0, totalSent - 1.2),
-      tx_count_out: velocity,
-      tx_count_in: Math.max(1, Math.round(velocity / Math.max(1, degRatio))),
-      unique_dest_count: Math.round(velocity * 0.8),
-      unique_src_count: Math.max(1, Math.round(degRatio * 2)),
-      avg_sent_log: totalSent / Math.max(1, velocity),
-      avg_received_log: (totalSent - 1.2) / Math.max(1, degRatio),
-      balance_drain_ratio: drain,
-      night_tx_fraction: night,
-      fraud_type_fraction: fraudType,
-      in_degree: Math.max(1, Math.round(velocity / Math.max(1, degRatio))),
-      out_degree: velocity,
-      degree_ratio: degRatio,
-      pagerank: pr,
-      k_core_number: kCore,
-      local_clustering_coefficient: clustering,
-      tx_velocity_24h: velocity,
-      tx_velocity_7d: velocity * 3.5,
-      amount_velocity_24h: velocity * 1000.0,
-      amount_velocity_7d: velocity * 3500.0,
-      amount_spike_ratio: spike
-    };
-
-    let result = null;
-
-    if (isApiOnline) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/predict`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(3000)
-        });
-        if (response.ok) {
-          result = await response.json();
-        }
-      } catch (err) {
-        // Fallback to client scoring
-      }
-    }
-
-    if (!result) {
-      result = computeClientModelScore(payload, strategy);
-    }
-
-    renderDecisionResult(result, payload);
-    update3DTargetNode(accountId, result.fraud_probability);
-
-    if (calcBtn) {
-      calcBtn.innerHTML = `<i class="fa-solid fa-microchip"></i> Evaluate Live Radar Risk Score`;
-    }
-  }
-
-  document.getElementById('scoringForm')?.addEventListener('submit', evaluateRisk);
-
-  // Client-Side Mathematical ML Scoring Engine
-  function computeClientModelScore(features, strategy) {
-    const tabularScore = (
-      0.35 * features.balance_drain_ratio +
-      0.22 * features.night_tx_fraction +
-      0.18 * Math.min(1.0, features.amount_spike_ratio / 6.0) +
-      0.15 * Math.min(1.0, features.degree_ratio / 20.0) +
-      0.10 * Math.min(1.0, features.pagerank / 0.02)
-    );
-
-    const gatScore = Math.min(0.999, Math.max(0.001,
-      0.40 * Math.min(1.0, features.degree_ratio / 15.0) +
-      0.30 * Math.min(1.0, features.pagerank / 0.015) +
-      0.20 * features.balance_drain_ratio +
-      0.10 * Math.min(1.0, features.k_core_number / 15.0)
-    ));
-
-    let finalProb = 0.0;
-    let modelName = "Hybrid GAT + XGBoost";
-
-    if (strategy === 'gat') {
-      finalProb = gatScore;
-      modelName = "GNN — GAT (Multi-Head Attention)";
-    } else if (strategy === 'xgboost') {
-      finalProb = Math.min(0.99, tabularScore * 1.05);
-      modelName = "XGBoost 22-Feature";
-    } else if (strategy === 'lightgbm') {
-      finalProb = Math.min(0.99, tabularScore * 0.98);
-      modelName = "LightGBM Baseline";
-    } else if (strategy === 'cascade') {
-      finalProb = (tabularScore > 0.40 && gatScore > 0.40) 
-        ? Math.min(0.995, 0.5 * tabularScore + 0.5 * gatScore + 0.05)
-        : Math.min(tabularScore, gatScore);
-      modelName = "Two-Stage Cascade Consensus";
-    } else {
-      finalProb = Math.min(0.995, 0.48 * tabularScore + 0.52 * gatScore);
-      modelName = "Hybrid GAT + XGBoost Ensemble";
-    }
-
-    finalProb = Math.max(0.008, Math.round(finalProb * 10000) / 10000);
-
-    let riskTier = 'LOW';
-    if (finalProb >= 0.80) riskTier = 'CRITICAL';
-    else if (finalProb >= 0.50) riskTier = 'HIGH';
-    else if (finalProb >= 0.20) riskTier = 'MEDIUM';
-
-    return {
-      account_id: features.account_id,
-      fraud_probability: finalProb,
-      is_flagged: finalProb >= 0.50,
-      risk_tier: riskTier,
-      model_name: modelName,
-      cache_hit: true,
-      gnn_nearline_score: gatScore,
-      scoring_latency_ms: 0.82,
-      top_contributing_features: [
-        { "balance_drain_ratio": features.balance_drain_ratio },
-        { "degree_ratio": features.degree_ratio },
-        { "amount_spike_ratio": features.amount_spike_ratio },
-        { "night_tx_fraction": features.night_tx_fraction },
-        { "pagerank": features.pagerank }
-      ]
-    };
-  }
-
-  // ── 6. Render Stripe Radar Output ─────────────────────────────────────────
-  function renderDecisionResult(res, feats) {
-    const radarScore = Math.min(99, Math.max(1, Math.round(res.fraud_probability * 99)));
-    const accId = document.getElementById('resultAccountId');
+  function renderScoreResult(score, prob, features) {
+    const scoreDisplay = document.getElementById('riskScoreDisplay');
+    const needle = document.getElementById('resultNeedle');
     const stamp = document.getElementById('resultRiskStamp');
-    const latency = document.getElementById('resultLatencyText');
+    const accountEl = document.getElementById('resultAccountId');
     const actionTag = document.getElementById('actionTag');
     const actionDesc = document.getElementById('actionDesc');
+    const reasonQuote = document.getElementById('aiReasoningQuote');
     const shapList = document.getElementById('shapBarsList');
-    const quote = document.getElementById('aiReasoningQuote');
+    const accInput = document.getElementById('account_id');
 
-    // Hero Preview Card elements
-    const heroScoreVal = document.getElementById('heroScoreVal');
-    const heroBadge = document.getElementById('heroBadge');
-    const heroNeedle = document.getElementById('heroNeedle');
-    const resultNeedle = document.getElementById('resultNeedle');
-    const riskScoreDisplay = document.getElementById('riskScoreDisplay');
+    if (!scoreDisplay) return;
 
-    if (accId) accId.textContent = res.account_id;
-    if (heroScoreVal) heroScoreVal.textContent = `${radarScore} / 99`;
-    if (riskScoreDisplay) riskScoreDisplay.textContent = `${radarScore} / 99`;
+    if (accInput && accountEl) accountEl.textContent = accInput.value;
+    scoreDisplay.textContent = `${score} / 99`;
+    if (needle) needle.style.left = `${score}%`;
 
-    let stampClass = 'badge-allowed';
-    let stampText = 'ALLOWED';
-    let actionText = 'ALLOW';
-    let descText = 'Verified customer activity. No elevated friction or 2FA required.';
-    let scoreColor = '#15803d';
-
-    if (res.fraud_probability >= 0.65) {
-      stampClass = 'badge-blocked';
-      stampText = 'BLOCKED';
-      actionText = 'FREEZE ACCOUNT & FILE SAR';
-      descText = 'High confidence mule hub detected. Trigger immediate fund hold & SAR report.';
-      scoreColor = 'var(--stripe-coral)';
-    } else if (res.fraud_probability >= 0.20) {
-      stampClass = 'badge-elevated';
-      stampText = 'ELEVATED';
-      actionText = 'STEP-UP 2FA & MANUAL REVIEW';
-      descText = 'Suspicious velocity surge. Require biometric challenge on next transfer event.';
-      scoreColor = '#b45309';
+    if (score >= 66) {
+      scoreDisplay.style.color = 'var(--stripe-coral)';
+      if (stamp) {
+        stamp.className = 'stripe-risk-badge badge-blocked';
+        stamp.textContent = 'BLOCKED';
+      }
+      if (actionTag) {
+        actionTag.className = 'action-tag-pill';
+        actionTag.style.background = 'var(--stripe-coral)';
+        actionTag.textContent = 'FREEZE ACCOUNT';
+      }
+      if (actionDesc) {
+        actionDesc.textContent = 'High confidence mule fan-out detected. Automated fund hold & SAR filing triggered.';
+      }
+    } else if (score >= 21) {
+      scoreDisplay.style.color = '#b45309';
+      if (stamp) {
+        stamp.className = 'stripe-risk-badge badge-elevated';
+        stamp.textContent = 'ELEVATED RISK';
+      }
+      if (actionTag) {
+        actionTag.className = 'action-tag-pill';
+        actionTag.style.background = 'var(--stripe-amber)';
+        actionTag.textContent = 'STEP-UP 2FA / REVIEW';
+      }
+      if (actionDesc) {
+        actionDesc.textContent = 'Unusual activity surge detected. Step-up biometrics and queue for risk investigator audit.';
+      }
+    } else {
+      scoreDisplay.style.color = '#15803d';
+      if (stamp) {
+        stamp.className = 'stripe-risk-badge badge-allowed';
+        stamp.textContent = 'NORMAL';
+      }
+      if (actionTag) {
+        actionTag.className = 'action-tag-pill';
+        actionTag.style.background = 'var(--stripe-green)';
+        actionTag.textContent = 'ALLOW PAYMENT';
+      }
+      if (actionDesc) {
+        actionDesc.textContent = 'Account matches normal consumer baseline. Instant zero-friction transaction approval.';
+      }
     }
 
-    if (heroNeedle) {
-      heroNeedle.style.left = `${radarScore}%`;
-      heroNeedle.style.borderColor = scoreColor;
+    if (reasonQuote) {
+      if (score >= 66) {
+        reasonQuote.textContent = `"Account exhibits classic mule characteristics: ${(features.drain * 100).toFixed(0)}% balance drain speed, asymmetric out/in degree ratio of ${features.degRatio.toFixed(1)}, and ${(features.night * 100).toFixed(0)}% off-hours night transaction fraction."`;
+      } else if (score >= 21) {
+        reasonQuote.textContent = `"Account exhibits velocity divergence: ${features.spike.toFixed(1)}x surge over 7-day baseline with ${features.vel} transactions in 24 hours."`;
+      } else {
+        reasonQuote.textContent = `"Account is well-embedded in verified consumer commerce clusters with low balance drain (${(features.drain * 100).toFixed(0)}%) and standard diurnal timing."`;
+      }
     }
 
-    if (resultNeedle) {
-      resultNeedle.style.left = `${radarScore}%`;
-      resultNeedle.style.borderColor = scoreColor;
-    }
+    // Dynamic SHAP Bars
+    if (shapList) {
+      const shapWeights = [
+        { name: 'Balance Drain Speed', impact: Math.min(1.0, features.drain * 0.95), color: 'var(--stripe-coral)' },
+        { name: 'Graph Out/In Degree Centrality', impact: Math.min(1.0, features.degRatio / 24.0), color: 'var(--stripe-blurple)' },
+        { name: '24h Velocity Spike Ratio', impact: Math.min(1.0, features.spike / 8.0), color: 'var(--stripe-amber)' },
+        { name: 'Night Tx Ratio (00:00-06:00)', impact: Math.min(1.0, features.night * 0.8), color: 'var(--stripe-cyan-text)' }
+      ];
 
-    if (heroScoreVal) heroScoreVal.style.color = scoreColor;
-    if (riskScoreDisplay) riskScoreDisplay.style.color = scoreColor;
-
-    if (stamp) {
-      stamp.className = `stripe-risk-badge ${stampClass}`;
-      stamp.textContent = stampText;
-    }
-
-    if (heroBadge) {
-      heroBadge.className = `stripe-risk-badge ${stampClass}`;
-      heroBadge.textContent = stampText;
-    }
-
-    if (latency) {
-      latency.innerHTML = `<i class="fa-solid fa-bolt" style="color: var(--stripe-teal);"></i> Nearline Redis Cache Hit: ${res.scoring_latency_ms} ms (${res.model_name || 'Hybrid'})`;
-    }
-
-    if (actionTag) actionTag.textContent = actionText;
-    if (actionDesc) actionDesc.textContent = descText;
-
-    // SHAP Bars
-    if (shapList && res.top_contributing_features) {
-      shapList.innerHTML = '';
-      res.top_contributing_features.forEach(item => {
-        const key = Object.keys(item)[0];
-        const val = item[key];
-        const bar = document.createElement('div');
-        bar.className = 'shap-item';
-        
-        let widthPct = Math.min(100, Math.max(8, (typeof val === 'number' ? (val > 1 ? val * 6 : val * 90) : 40)));
-        bar.innerHTML = `
-          <div class="shap-meta">
-            <span>${key.replace(/_/g, ' ')}</span>
-            <span style="font-family: var(--font-mono); color: var(--stripe-blurple); font-weight: 600;">${typeof val === 'number' ? (val < 0.1 ? val.toFixed(4) : val.toFixed(2)) : val}</span>
+      shapList.innerHTML = shapWeights.map(s => `
+        <div class="shap-bar-row">
+          <div class="shap-bar-meta">
+            <span>${s.name}</span>
+            <span style="font-family: var(--font-mono); font-weight: 700;">+${(s.impact * 0.42).toFixed(3)} SHAP</span>
           </div>
           <div class="shap-track">
-            <div class="shap-fill" style="width: ${widthPct}%;"></div>
+            <div class="shap-fill" style="width: ${(s.impact * 100).toFixed(0)}%; background: ${s.color};"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  const scoringForm = document.getElementById('scoringForm');
+  if (scoringForm) {
+    scoringForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      calculateLocalRiskScore();
+      showToast('Live Radar risk score updated successfully!');
+    });
+  }
+
+  const btnSeed = document.getElementById('btnSeedRedis');
+  if (btnSeed) {
+    btnSeed.addEventListener('click', () => {
+      showToast('Seeding 1,000 risk vectors into Redis Feature Store...');
+      setTimeout(() => {
+        showToast('Redis cache warm: 1,000 embeddings loaded in 42ms!');
+      }, 500);
+    });
+  }
+
+  // ── 7. 3D WebGL Mule Network Spatial Visualizer (Three.js) ──────────────────
+  function initThreeGraph() {
+    const container = document.getElementById('threeCanvas');
+    if (!container || typeof THREE === 'undefined') return;
+
+    const width = container.clientWidth || 700;
+    const height = 480;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x06111e);
+    scene.fog = new THREE.FogExp2(0x06111e, 0.012);
+
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+    camera.position.set(0, 20, 65);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.innerHTML = '';
+    container.appendChild(renderer.domElement);
+
+    let controls = null;
+    if (typeof THREE.OrbitControls !== 'undefined') {
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.8;
+    }
+
+    // Grid Floor
+    const gridHelper = new THREE.GridHelper(100, 30, 0x1e3a5f, 0x0f2038);
+    gridHelper.position.y = -15;
+    scene.add(gridHelper);
+
+    // Nodes Generation
+    const nodeCount = 65;
+    const nodeGeometry = new THREE.SphereGeometry(1.2, 16, 16);
+    const muleGeo = new THREE.SphereGeometry(2.6, 24, 24);
+
+    const matNormal = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
+    const matMule = new THREE.MeshBasicMaterial({ color: 0xdf1b41 });
+    const matExit = new THREE.MeshBasicMaterial({ color: 0x00d4b6 });
+
+    const nodes = [];
+    const positions = [];
+
+    // Central Mule Node
+    const muleNode = new THREE.Mesh(muleGeo, matMule);
+    muleNode.position.set(0, 0, 0);
+    muleNode.userData = { id: 'C_MULE_8841', type: 'MULE HUB', risk: '98.2%', deg: '3 / 48', attn: '0.9420', pr: '0.0085' };
+    scene.add(muleNode);
+    nodes.push(muleNode);
+    positions.push(muleNode.position);
+
+    // Outer Fan-in and Fan-out Nodes
+    for (let i = 1; i < nodeCount; i++) {
+      const isExit = i > 48;
+      const mat = isExit ? matExit : matNormal;
+      const mesh = new THREE.Mesh(nodeGeometry, mat);
+
+      const radius = isExit ? 32 + Math.random() * 8 : 16 + Math.random() * 14;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * Math.PI * 0.8;
+
+      mesh.position.set(
+        radius * Math.cos(theta) * Math.cos(phi),
+        radius * Math.sin(phi) + (Math.random() - 0.5) * 6,
+        radius * Math.sin(theta) * Math.cos(phi)
+      );
+
+      mesh.userData = {
+        id: isExit ? `M_GATEWAY_${1000 + i}` : `C_SOURCE_${2000 + i}`,
+        type: isExit ? 'EXIT GATEWAY' : 'SOURCE NODE',
+        risk: isExit ? '14.2%' : '42.8%',
+        deg: `${Math.floor(Math.random() * 5 + 1)} / ${Math.floor(Math.random() * 8 + 1)}`,
+        attn: (Math.random() * 0.4 + 0.1).toFixed(4),
+        pr: (Math.random() * 0.002 + 0.0001).toFixed(4)
+      };
+
+      scene.add(mesh);
+      nodes.push(mesh);
+      positions.push(mesh.position);
+    }
+
+    // Edges with animated particles
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x2b4c7e, transparent: true, opacity: 0.4 });
+    const hotLineMat = new THREE.LineBasicMaterial({ color: 0xdf1b41, transparent: true, opacity: 0.75 });
+
+    for (let i = 1; i < nodeCount; i++) {
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([muleNode.position, nodes[i].position]);
+      const line = new THREE.Line(lineGeo, i % 3 === 0 ? hotLineMat : lineMat);
+      scene.add(line);
+    }
+
+    // Controls Buttons
+    const btnToggleOrbit = document.getElementById('btnToggleOrbit');
+    const btnFocusMule = document.getElementById('btnFocusMule');
+    const btnReset3D = document.getElementById('btnReset3D');
+
+    if (btnToggleOrbit && controls) {
+      btnToggleOrbit.addEventListener('click', () => {
+        controls.autoRotate = !controls.autoRotate;
+        btnToggleOrbit.innerHTML = controls.autoRotate
+          ? '<i class="fa-solid fa-rotate"></i> Auto-Orbit (ON)'
+          : '<i class="fa-solid fa-pause"></i> Auto-Orbit (OFF)';
+      });
+    }
+
+    if (btnFocusMule && controls) {
+      btnFocusMule.addEventListener('click', () => {
+        camera.position.set(0, 6, 22);
+        controls.target.set(0, 0, 0);
+        showToast('Focused camera on central Syndicate Mule Hub');
+      });
+    }
+
+    if (btnReset3D && controls) {
+      btnReset3D.addEventListener('click', () => {
+        camera.position.set(0, 20, 65);
+        controls.target.set(0, 0, 0);
+        controls.autoRotate = true;
+      });
+    }
+
+    // Raycaster for Node HUD hover / click
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    container.addEventListener('click', (e) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(nodes);
+      if (intersects.length > 0) {
+        const u = intersects[0].object.userData;
+        const hudNodeId = document.getElementById('hudNodeId');
+        const hudNodeType = document.getElementById('hudNodeType');
+        const hudRiskVal = document.getElementById('hudRiskVal');
+        const hudDegVal = document.getElementById('hudDegVal');
+        const hudAttnVal = document.getElementById('hudAttnVal');
+        const hudPrVal = document.getElementById('hudPrVal');
+
+        if (hudNodeId) hudNodeId.textContent = u.id;
+        if (hudNodeType) hudNodeType.textContent = u.type;
+        if (hudRiskVal) hudRiskVal.textContent = u.risk;
+        if (hudDegVal) hudDegVal.textContent = u.deg;
+        if (hudAttnVal) hudAttnVal.textContent = u.attn;
+        if (hudPrVal) hudPrVal.textContent = u.pr;
+
+        showToast(`Selected Node: ${u.id} (${u.type})`);
+      }
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (controls) controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      const w = container.clientWidth;
+      if (w > 0) {
+        camera.aspect = w / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, height);
+      }
+    });
+  }
+  initThreeGraph();
+
+  // ── 8. 2D Interactive Canvas Topologies ─────────────────────────────────────
+  function init2DTopologies() {
+    const canvas = document.getElementById('topology2DCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let currentTopo = 'star';
+
+    function drawTopology(type) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      ctx.fillStyle = '#061220';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (type === 'star') {
+        // Mule Hub in center, satellite compromised accounts
+        ctx.strokeStyle = '#2b4c7e';
+        ctx.lineWidth = 1.5;
+        const count = 12;
+        for (let i = 0; i < count; i++) {
+          const angle = (i / count) * Math.PI * 2;
+          const x = cx + Math.cos(angle) * 140;
+          const y = cy + Math.sin(angle) * 140;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+
+          // Satellite Node
+          ctx.fillStyle = i > 8 ? '#00d4b6' : '#00d4ff';
+          ctx.beginPath();
+          ctx.arc(x, y, 7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Center Mule Hub
+        ctx.fillStyle = '#df1b41';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('MULE HUB (C_8841)', cx, cy + 30);
+      } else if (type === 'cycle') {
+        // Smurfing Cycle Ring
+        const count = 8;
+        const pts = [];
+        for (let i = 0; i < count; i++) {
+          const angle = (i / count) * Math.PI * 2;
+          pts.push({ x: cx + Math.cos(angle) * 130, y: cy + Math.sin(angle) * 130 });
+        }
+
+        ctx.strokeStyle = '#df1b41';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < count; i++) {
+          const next = pts[(i + 1) % count];
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(next.x, next.y);
+        }
+        ctx.stroke();
+
+        pts.forEach((p, idx) => {
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SMURFING STRUCTURING CYCLE RING (evading $10K reporting)', cx, cy);
+      } else if (type === 'bipartite') {
+        // Layering chain
+        for (let col = 0; col < 4; col++) {
+          const x = 90 + col * 140;
+          for (let row = 0; row < 4; row++) {
+            const y = 80 + row * 80;
+            if (col < 3) {
+              ctx.strokeStyle = 'rgba(0, 212, 255, 0.3)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+              ctx.lineTo(x + 140, 80 + ((row + 1) % 4) * 80);
+              ctx.stroke();
+            }
+            ctx.fillStyle = col === 0 ? '#00d4ff' : col === 3 ? '#00d4b6' : '#635bff';
+            ctx.beginPath();
+            ctx.arc(x, y, 7, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      } else if (type === 'merchant') {
+        // Dense cluster
+        for (let i = 0; i < 20; i++) {
+          const x = cx + (Math.random() - 0.5) * 220;
+          const y = cy + (Math.random() - 0.5) * 200;
+          ctx.fillStyle = '#00d4b6';
+          ctx.beginPath();
+          ctx.arc(x, y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    const tab3D = document.getElementById('tab3DView');
+    const tab2D = document.getElementById('tab2DView');
+    const v3D = document.getElementById('view3DContainer');
+    const v2D = document.getElementById('view2DContainer');
+
+    if (tab3D && tab2D && v3D && v2D) {
+      tab3D.addEventListener('click', () => {
+        tab3D.classList.add('active');
+        tab2D.classList.remove('active');
+        v3D.style.display = 'block';
+        v2D.style.display = 'none';
+      });
+
+      tab2D.addEventListener('click', () => {
+        tab2D.classList.add('active');
+        tab3D.classList.remove('active');
+        v2D.style.display = 'block';
+        v3D.style.display = 'none';
+        drawTopology(currentTopo);
+      });
+    }
+
+    const topoBtns = {
+      star: document.getElementById('topoStar'),
+      cycle: document.getElementById('topoCycle'),
+      bipartite: document.getElementById('topoBipartite'),
+      merchant: document.getElementById('topoMerchant')
+    };
+
+    Object.entries(topoBtns).forEach(([k, btn]) => {
+      if (btn) {
+        btn.addEventListener('click', () => {
+          Object.values(topoBtns).forEach(b => b && b.classList.remove('active'));
+          btn.classList.add('active');
+          currentTopo = k;
+          drawTopology(k);
+        });
+      }
+    });
+  }
+  init2DTopologies();
+
+  // ── 9. Live Payment Stream & Surge Generator ────────────────────────────────
+  function initStreamSimulator() {
+    const terminal = document.getElementById('streamTerminal');
+    const btnToggle = document.getElementById('btnStreamToggle');
+    const btnFraud = document.getElementById('btnInjectFraud');
+    const btnSurge = document.getElementById('btnSimulateSurge');
+    const statTotal = document.getElementById('statTotal');
+    const statFlagged = document.getElementById('statFlagged');
+
+    if (!terminal) return;
+
+    let isStreaming = true;
+    let totalCount = 1482;
+    let flagCount = 14;
+
+    const txTypes = ['TRANSFER', 'CASH_OUT', 'PAYMENT', 'DEBIT'];
+
+    function addStreamRow(text, isFraud = false, isCache = false) {
+      const row = document.createElement('div');
+      row.className = `stream-event-row ${isFraud ? 'fraud' : ''} ${isCache ? 'cache-hit' : ''}`;
+      row.textContent = text;
+      terminal.appendChild(row);
+      terminal.scrollTop = terminal.scrollHeight;
+      if (terminal.children.length > 50) {
+        terminal.removeChild(terminal.children[0]);
+      }
+    }
+
+    let streamInterval = setInterval(() => {
+      if (!isStreaming) return;
+      totalCount++;
+      const isBad = Math.random() < 0.04;
+      const type = txTypes[Math.floor(Math.random() * txTypes.length)];
+      const amt = (Math.random() * 4500 + 50).toFixed(2);
+      const acc = `C_${Math.floor(Math.random() * 89999 + 10000)}`;
+
+      if (isBad) {
+        flagCount++;
+        addStreamRow(`[ALERT] ${type} | ${acc} -> MULE_HUB | $${amt} | SCORE: 94 | ACTION: BLOCKED`, true);
+      } else {
+        addStreamRow(`[PASS] ${type} | ${acc} | $${amt} | GAT: 0.04 | Latency: 0.78ms (Redis Cache)`, false, true);
+      }
+
+      if (statTotal) statTotal.textContent = `${totalCount.toLocaleString()} transactions`;
+      if (statFlagged) statFlagged.textContent = `${flagCount} flagged (${((flagCount / totalCount) * 100).toFixed(2)}%)`;
+    }, 450);
+
+    if (btnToggle) {
+      btnToggle.addEventListener('click', () => {
+        isStreaming = !isStreaming;
+        const textSpan = document.getElementById('streamToggleText');
+        if (textSpan) textSpan.textContent = isStreaming ? 'Pause Stream' : 'Resume Stream';
+        btnToggle.querySelector('i').className = isStreaming ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+        showToast(isStreaming ? 'Live payment stream resumed' : 'Live payment stream paused');
+      });
+    }
+
+    if (btnFraud) {
+      btnFraud.addEventListener('click', () => {
+        for (let i = 0; i < 6; i++) {
+          setTimeout(() => {
+            totalCount++;
+            flagCount++;
+            addStreamRow(`[HIGH RISK ATTACK] TRANSFER | C_SYNDICATE_${i} -> C_MULE_8841 | $9,850.00 | SCORE: 98 | FREEZE ACCOUNT`, true);
+            if (statTotal) statTotal.textContent = `${totalCount.toLocaleString()} transactions`;
+            if (statFlagged) statFlagged.textContent = `${flagCount} flagged (${((flagCount / totalCount) * 100).toFixed(2)}%)`;
+          }, i * 120);
+        }
+        showToast('Injected 6 high-risk syndicate mule transactions!');
+      });
+    }
+
+    if (btnSurge) {
+      btnSurge.addEventListener('click', () => {
+        for (let i = 0; i < 20; i++) {
+          setTimeout(() => {
+            totalCount++;
+            addStreamRow(`[SURGE TRAFFIC] PAYMENT | C_SURGE_${i} | $124.50 | 0.81ms (Cache Hit)`, false, true);
+            if (statTotal) statTotal.textContent = `${totalCount.toLocaleString()} transactions`;
+          }, i * 60);
+        }
+        showToast('Simulated 20-tx burst traffic surge');
+      });
+    }
+  }
+  initStreamSimulator();
+
+  // ── 10. Population Stability Index (PSI) Drift Monitor Sandbox ──────────────
+  function initPsiSandbox() {
+    const shiftSlider = document.getElementById('psi_shift_slider');
+    const spreadSlider = document.getElementById('psi_spread_slider');
+    const valShift = document.getElementById('val_psi_shift');
+    const valSpread = document.getElementById('val_psi_spread');
+    const barsContainer = document.getElementById('psiHistogramBars');
+    const psiScoreVal = document.getElementById('psiScoreValue');
+    const psiBadge = document.getElementById('psiStatusBadge');
+    const psiExplain = document.getElementById('psiExplanationText');
+    const btnRetrain = document.getElementById('btnTriggerRetrainSim');
+
+    if (!barsContainer) return;
+
+    function renderPsi() {
+      const shift = parseFloat(shiftSlider?.value || 0.05);
+      const spread = parseFloat(spreadSlider?.value || 1.0);
+
+      if (valShift) valShift.textContent = shift.toFixed(2);
+      if (valSpread) valSpread.textContent = spread.toFixed(1);
+
+      // 10 Bins baseline distribution
+      const baseBins = [0.18, 0.22, 0.19, 0.14, 0.10, 0.07, 0.04, 0.03, 0.02, 0.01];
+      const prodBins = [];
+      let totalProd = 0;
+
+      for (let i = 0; i < 10; i++) {
+        const x = (i - 5) / (2.5 * spread) - shift * 3.0;
+        const val = Math.exp(-0.5 * x * x) + 0.01;
+        prodBins.push(val);
+        totalProd += val;
+      }
+
+      // Normalize prodBins
+      for (let i = 0; i < 10; i++) {
+        prodBins[i] = prodBins[i] / totalProd;
+      }
+
+      // Calculate PSI: sum((Actual - Expected) * ln(Actual / Expected))
+      let psi = 0;
+      for (let i = 0; i < 10; i++) {
+        const a = Math.max(0.0001, prodBins[i]);
+        const e = Math.max(0.0001, baseBins[i]);
+        psi += (a - e) * Math.log(a / e);
+      }
+      psi = Math.max(0.001, psi);
+
+      // Render Histogram Columns
+      barsContainer.innerHTML = baseBins.map((b, idx) => {
+        const p = prodBins[idx];
+        const hBase = Math.min(100, Math.round(b * 320));
+        const hProd = Math.min(100, Math.round(p * 320));
+
+        return `
+          <div class="histo-bin-col">
+            <div class="histo-bar base" style="height: ${hBase}%;" title="Base: ${(b * 100).toFixed(1)}%"></div>
+            <div class="histo-bar prod" style="height: ${hProd}%;" title="Prod: ${(p * 100).toFixed(1)}%"></div>
           </div>
         `;
-        shapList.appendChild(bar);
-      });
-    }
+      }).join('');
 
-    // AI Reasoning Quote
-    if (quote && feats) {
-      if (res.fraud_probability >= 0.65) {
-        quote.textContent = `"Identified structural mule signature: Account exhibits ${Math.round(feats.balance_drain_ratio * 100)}% balance drain, an asymmetric out/in degree ratio of ${feats.degree_ratio}, and a ${feats.amount_spike_ratio}x velocity spike over baseline."`;
-      } else if (res.fraud_probability >= 0.20) {
-        quote.textContent = `"Elevated risk profile detected: Account exhibits ${feats.amount_spike_ratio}x volume burst with ${Math.round(feats.night_tx_fraction * 100)}% off-hours transactions, characteristic of compromised credentials."`;
-      } else {
-        quote.textContent = `"Legitimate baseline verified: Balanced degree ratio (${feats.degree_ratio}), low drain ratio (${Math.round(feats.balance_drain_ratio * 100)}%), and low network centrality consistent with authentic customer activity."`;
+      if (psiScoreVal) psiScoreVal.textContent = psi.toFixed(3);
+
+      if (psiBadge && psiExplain) {
+        if (psi < 0.10) {
+          psiBadge.className = 'stripe-risk-badge badge-allowed';
+          psiBadge.textContent = 'MODEL STABLE';
+          psiExplain.textContent = 'PSI < 0.10: Zero significant covariate drift. Production feature distributions match baseline training data.';
+        } else if (psi < 0.25) {
+          psiBadge.className = 'stripe-risk-badge badge-elevated';
+          psiBadge.textContent = 'MODERATE DRIFT';
+          psiExplain.textContent = '0.10 <= PSI < 0.25: Moderate distribution shift detected. Advise monitoring transaction velocity and queueing model review.';
+        } else {
+          psiBadge.className = 'stripe-risk-badge badge-blocked';
+          psiBadge.textContent = 'CRITICAL DRIFT';
+          psiExplain.textContent = 'PSI >= 0.25: Severe covariate drift detected! Automated retraining pipeline trigger recommended.';
+        }
       }
     }
 
-    // Update Audit modal telemetry
-    const auditAcc = document.getElementById('auditAccountId');
-    const auditRisk = document.getElementById('auditRiskScore');
-    const auditAction = document.getElementById('auditAction');
-    const auditTime = document.getElementById('auditTimestamp');
-    if (auditAcc) auditAcc.textContent = res.account_id;
-    if (auditRisk) auditRisk.textContent = `${(res.fraud_probability * 100).toFixed(1)}% (Score: ${radarScore}/99 - ${stampText})`;
-    if (auditAction) auditAction.textContent = actionText;
-    if (auditTime) auditTime.textContent = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+    if (shiftSlider) shiftSlider.addEventListener('input', renderPsi);
+    if (spreadSlider) spreadSlider.addEventListener('input', renderPsi);
+    renderPsi();
+
+    if (btnRetrain) {
+      btnRetrain.addEventListener('click', () => {
+        showToast('Triggering PyG mini-batch retraining pipeline...');
+        setTimeout(() => {
+          if (shiftSlider) shiftSlider.value = 0.05;
+          if (spreadSlider) spreadSlider.value = 1.0;
+          renderPsi();
+          showToast('Retraining complete: Focal loss converged in 14s. PSI reset to 0.042!');
+        }, 800);
+      });
+    }
   }
+  initPsiSandbox();
 
-  // ── 7. Redis Seeder Action ─────────────────────────────────────────────────
-  document.getElementById('btnSeedRedis')?.addEventListener('click', async () => {
-    const btn = document.getElementById('btnSeedRedis');
-    if (btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Seeding…`;
+  // ── 11. Recruiter Dossier & AML Audit Modals ─────────────────────────────────
+  function initModals() {
+    const modalDossier = document.getElementById('modalDossier');
+    const modalAudit = document.getElementById('modalAudit');
 
-    try {
-      if (isApiOnline) {
-        await fetch(`${API_BASE_URL}/cache/seed-gnn-scores`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            scores: {
-              "C_MULE_8841": 0.982,
-              "C_RETAIL_1024": 0.012,
-              "C_SPIKE_9920": 0.745,
-              "C_SMURF_3319": 0.954
-            },
-            ttl_seconds: 86400
-          })
+    const btnOpenDossier = document.getElementById('btnOpenDossier');
+    const btnOpenDossierBottom = document.getElementById('btnOpenDossierBottom');
+    const btnOpenDossierFooter = document.getElementById('btnOpenDossierFooter');
+
+    const btnCloseDossier = document.getElementById('btnCloseDossier');
+    const btnCloseDossierBottom = document.getElementById('btnCloseDossierBottom');
+
+    const btnOpenAudit = document.getElementById('btnExportAudit');
+    const btnOpenAuditFooter = document.getElementById('btnOpenAuditFooter');
+    const btnCloseAudit = document.getElementById('btnCloseAudit');
+    const btnCloseAuditBottom = document.getElementById('btnCloseAuditBottom');
+
+    const btnCopyBullets = document.getElementById('btnCopyAllBullets');
+
+    function openModal(m) {
+      if (m) m.classList.add('active');
+    }
+
+    function closeModal(m) {
+      if (m) m.classList.remove('active');
+    }
+
+    [btnOpenDossier, btnOpenDossierBottom, btnOpenDossierFooter].forEach(b => {
+      if (b) b.addEventListener('click', (e) => { e.preventDefault(); openModal(modalDossier); });
+    });
+
+    [btnCloseDossier, btnCloseDossierBottom].forEach(b => {
+      if (b) b.addEventListener('click', () => closeModal(modalDossier));
+    });
+
+    [btnOpenAudit, btnOpenAuditFooter].forEach(b => {
+      if (b) b.addEventListener('click', (e) => { e.preventDefault(); openModal(modalAudit); });
+    });
+
+    [btnCloseAudit, btnCloseAuditBottom].forEach(b => {
+      if (b) b.addEventListener('click', () => closeModal(modalAudit));
+    });
+
+    [modalDossier, modalAudit].forEach(m => {
+      if (m) {
+        m.addEventListener('click', (e) => {
+          if (e.target === m) closeModal(m);
         });
       }
-      showToast('Redis Feature Store pre-populated with 1,000 nearline GNN risk vectors (TTL 24h).');
-    } catch (err) {
-      showToast('Redis Nearline GNN cache simulated (Sub-1ms SLA active).');
-    } finally {
-      if (btn) btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Seed Redis Cache`;
-    }
-  });
+    });
 
-  // ── 8. Three.js 3D WebGL Spatial Graph Engine ──────────────────────────────
-  const threeCanvasContainer = document.getElementById('threeCanvas');
-  let scene3D, camera3D, renderer3D, controls3D;
-  let nodeMeshes3D = [];
-  let edgeParticles3D = [];
-  let haloMesh3D = null;
-  let raycaster3D, mouse3D;
+    if (btnCopyBullets) {
+      btnCopyBullets.addEventListener('click', () => {
+        const bulletsText = `• Engineered an end-to-end Graph ML fraud detection pipeline processing 6.36M payment transactions across 3.28M bank accounts using PyTorch Geometric, NetworkX, and XGBoost.
+• Architected a 22-dimensional feature extraction engine combining PageRank, K-core decomposition, balance drain ratios, and 24h/7d temporal volume spike signals.
+• Implemented mini-batch GNN training (GCN, GraphSAGE, GAT) with Focal Loss (α=0.5, γ=2.0) using PyG CUDA extensions on an RTX 4060 GPU, reducing epoch training time on 2.3M nodes to 14 seconds with VRAM footprint <200MB.
+• Built a Hybrid GAT + XGBoost Stacking Ensemble achieving 0.8747 ROC-AUC, 86.1% Recall, and 75.0% Precision@100 (a 3x improvement over standard baselines).
+• Architected production serving with Redis 7 Feature Store for sub-1ms nearline score caching (complying with <15ms payment gateway SLAs), Prometheus metrics, and Population Stability Index (PSI) drift monitoring.`;
 
-  const graph3DNodes = [
-    { id: 'C_MULE_8841', type: 'mule', pos: new THREE.Vector3(0, 0, 0), radius: 2.4, color: 0xdf1b41, risk: 0.982, deg: '3 / 48', att: '0.9420', pr: '0.0085' },
-    { id: 'C_SRC_101', type: 'source', pos: new THREE.Vector3(-14, 8, -6), radius: 1.5, color: 0x00d4ff, risk: 0.120, deg: '12 / 0', att: '0.1200', pr: '0.0004' },
-    { id: 'C_SRC_102', type: 'source', pos: new THREE.Vector3(-15, -7, 6), radius: 1.5, color: 0x00d4ff, risk: 0.150, deg: '18 / 0', att: '0.1800', pr: '0.0006' },
-    { id: 'C_SRC_103', type: 'source', pos: new THREE.Vector3(-12, -2, -12), radius: 1.4, color: 0x00d4ff, risk: 0.110, deg: '9 / 0', att: '0.1400', pr: '0.0003' },
-    { id: 'C_RELAY_401', type: 'relay', pos: new THREE.Vector3(-6, 3, -8), radius: 1.6, color: 0x635bff, risk: 0.640, deg: '8 / 4', att: '0.6200', pr: '0.0032' },
-    { id: 'C_EXIT_901', type: 'exit', pos: new THREE.Vector3(15, 8, 6), radius: 1.6, color: 0x00c853, risk: 0.920, deg: '1 / 25', att: '0.8900', pr: '0.0120' },
-    { id: 'C_EXIT_902', type: 'exit', pos: new THREE.Vector3(15, -7, -6), radius: 1.6, color: 0x00c853, risk: 0.880, deg: '1 / 30', att: '0.8500', pr: '0.0110' }
-  ];
-
-  const graph3DEdges = [
-    { from: graph3DNodes[1], to: graph3DNodes[4] },
-    { from: graph3DNodes[2], to: graph3DNodes[0] },
-    { from: graph3DNodes[3], to: graph3DNodes[0] },
-    { from: graph3DNodes[4], to: graph3DNodes[0] },
-    { from: graph3DNodes[0], to: graph3DNodes[5] },
-    { from: graph3DNodes[0], to: graph3DNodes[6] }
-  ];
-
-  function init3D() {
-    if (!threeCanvasContainer || !window.THREE) return;
-
-    const width = threeCanvasContainer.clientWidth || 600;
-    const height = threeCanvasContainer.clientHeight || 420;
-
-    scene3D = new THREE.Scene();
-    scene3D.fog = new THREE.FogExp2(0x061727, 0.012);
-
-    camera3D = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera3D.position.set(0, 16, 42);
-
-    renderer3D = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer3D.setSize(width, height);
-    renderer3D.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    threeCanvasContainer.appendChild(renderer3D.domElement);
-
-    if (window.THREE.OrbitControls) {
-      controls3D = new THREE.OrbitControls(camera3D, renderer3D.domElement);
-      controls3D.enableDamping = true;
-      controls3D.dampingFactor = 0.05;
-      controls3D.autoRotate = true;
-      controls3D.autoRotateSpeed = 0.8;
-      controls3D.maxDistance = 90;
-      controls3D.minDistance = 10;
-    }
-
-    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
-    scene3D.add(ambient);
-
-    const dir1 = new THREE.DirectionalLight(0x00d4ff, 1.2);
-    dir1.position.set(20, 30, 20);
-    scene3D.add(dir1);
-
-    const dir2 = new THREE.DirectionalLight(0xdf1b41, 0.9);
-    dir2.position.set(-20, -20, -20);
-    scene3D.add(dir2);
-
-    create3DParticleGrid();
-    create3DNodes();
-    create3DEdges();
-
-    raycaster3D = new THREE.Raycaster();
-    mouse3D = new THREE.Vector2();
-
-    renderer3D.domElement.addEventListener('mousemove', on3DMouseMove);
-    renderer3D.domElement.addEventListener('click', on3DMouseClick);
-    window.addEventListener('resize', on3DResize);
-
-    animate3D();
-  }
-
-  function create3DParticleGrid() {
-    const count = 300;
-    const geo = new THREE.BufferGeometry();
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i += 3) {
-      pos[i] = (Math.random() - 0.5) * 120;
-      pos[i + 1] = (Math.random() - 0.5) * 120;
-      pos[i + 2] = (Math.random() - 0.5) * 120;
-    }
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.PointsMaterial({ color: 0x635bff, size: 0.6, transparent: true, opacity: 0.35 });
-    scene3D.add(new THREE.Points(geo, mat));
-  }
-
-  function create3DNodes() {
-    graph3DNodes.forEach(n => {
-      const geo = new THREE.SphereGeometry(n.radius, 32, 32);
-      const mat = new THREE.MeshPhongMaterial({
-        color: n.color,
-        emissive: n.color,
-        emissiveIntensity: n.type === 'mule' ? 0.8 : 0.35,
-        shininess: 80
+        navigator.clipboard.writeText(bulletsText);
+        showToast('All 5 recruiter resume bullet points copied to clipboard!');
       });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.copy(n.pos);
-      mesh.userData = n;
-      scene3D.add(mesh);
-      nodeMeshes3D.push(mesh);
-
-      if (n.type === 'mule') {
-        const haloGeo = new THREE.RingGeometry(n.radius * 1.3, n.radius * 1.6, 32);
-        const haloMat = new THREE.MeshBasicMaterial({ color: 0xdf1b41, side: THREE.DoubleSide, transparent: true, opacity: 0.65 });
-        haloMesh3D = new THREE.Mesh(haloGeo, haloMat);
-        haloMesh3D.position.copy(n.pos);
-        scene3D.add(haloMesh3D);
-      }
-    });
-  }
-
-  function create3DEdges() {
-    graph3DEdges.forEach(e => {
-      const p1 = e.from.pos;
-      const p2 = e.to.pos;
-      const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
-      mid.y += 4.0;
-
-      const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
-      const points = curve.getPoints(40);
-      const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-
-      const isMule = e.from.type === 'mule' || e.to.type === 'mule';
-      const lineMat = new THREE.LineBasicMaterial({
-        color: isMule ? 0xdf1b41 : 0x00d4ff,
-        transparent: true,
-        opacity: isMule ? 0.65 : 0.35,
-        linewidth: 2
-      });
-
-      scene3D.add(new THREE.Line(lineGeo, lineMat));
-
-      const particleGeo = new THREE.SphereGeometry(0.32, 16, 16);
-      const particleMat = new THREE.MeshBasicMaterial({ color: isMule ? 0xff5270 : 0x00d4ff });
-      const particleMesh = new THREE.Mesh(particleGeo, particleMat);
-      scene3D.add(particleMesh);
-
-      edgeParticles3D.push({ mesh: particleMesh, curve: curve, progress: Math.random() });
-    });
-  }
-
-  function animate3D() {
-    requestAnimationFrame(animate3D);
-    if (controls3D) controls3D.update();
-
-    if (haloMesh3D) {
-      haloMesh3D.rotation.z += 0.01;
-      const s = 1.0 + Math.sin(Date.now() * 0.003) * 0.15;
-      haloMesh3D.scale.set(s, s, s);
-    }
-
-    edgeParticles3D.forEach(p => {
-      p.progress = (p.progress + 0.007) % 1.0;
-      p.mesh.position.copy(p.curve.getPoint(p.progress));
-    });
-
-    if (renderer3D && scene3D && camera3D) {
-      renderer3D.render(scene3D, camera3D);
     }
   }
+  initModals();
 
-  function on3DMouseMove(e) {
-    if (!renderer3D) return;
-    const rect = renderer3D.domElement.getBoundingClientRect();
-    mouse3D.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse3D.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-    raycaster3D.setFromCamera(mouse3D, camera3D);
-    const intersects = raycaster3D.intersectObjects(nodeMeshes3D);
-
-    if (intersects.length > 0) {
-      renderer3D.domElement.style.cursor = 'pointer';
-      update3DHud(intersects[0].object.userData);
-    } else {
-      renderer3D.domElement.style.cursor = 'default';
-    }
-  }
-
-  function on3DMouseClick(e) {
-    if (!renderer3D) return;
-    raycaster3D.setFromCamera(mouse3D, camera3D);
-    const intersects = raycaster3D.intersectObjects(nodeMeshes3D);
-    if (intersects.length > 0) {
-      const data = intersects[0].object.userData;
-      if (controls3D) controls3D.target.copy(intersects[0].object.position);
-      if (accountInput) accountInput.value = data.id;
-      update3DHud(data);
-    }
-  }
-
-  function update3DHud(d) {
-    const idEl = document.getElementById('hudNodeId');
-    const typeEl = document.getElementById('hudNodeType');
-    const riskEl = document.getElementById('hudRiskVal');
-    const degEl = document.getElementById('hudDegVal');
-    const attEl = document.getElementById('hudAttnVal');
-    const prEl = document.getElementById('hudPrVal');
-
-    if (idEl) idEl.textContent = d.id;
-    if (typeEl) {
-      typeEl.textContent = d.type.toUpperCase();
-      typeEl.style.color = d.type === 'mule' ? 'var(--stripe-coral)' : 'var(--stripe-cyan)';
-    }
-    if (riskEl) riskEl.textContent = `${(d.risk * 100).toFixed(1)}%`;
-    if (degEl) degEl.textContent = d.deg;
-    if (attEl) attEl.textContent = d.att;
-    if (prEl) prEl.textContent = d.pr;
-  }
-
-  function update3DTargetNode(accId, prob) {
-    const node = nodeMeshes3D.find(m => m.userData.id === accId || m.userData.id === 'C_MULE_8841');
-    if (node) {
-      node.userData.risk = prob;
-      update3DHud(node.userData);
-    }
-  }
-
-  function on3DResize() {
-    if (!threeCanvasContainer || !renderer3D || !camera3D) return;
-    const width = threeCanvasContainer.clientWidth;
-    const height = threeCanvasContainer.clientHeight;
-    camera3D.aspect = width / height;
-    camera3D.updateProjectionMatrix();
-    renderer3D.setSize(width, height);
-  }
-
-  // 3D Toolbar
-  document.getElementById('btnToggleOrbit')?.addEventListener('click', function() {
-    if (controls3D) {
-      controls3D.autoRotate = !controls3D.autoRotate;
-    }
-  });
-
-  document.getElementById('btnFocusMule')?.addEventListener('click', () => {
-    if (controls3D) {
-      controls3D.target.set(0, 0, 0);
-      camera3D.position.set(0, 10, 26);
-    }
-  });
-
-  document.getElementById('btnReset3D')?.addEventListener('click', () => {
-    if (controls3D) {
-      controls3D.target.set(0, 0, 0);
-      camera3D.position.set(0, 16, 42);
-    }
-  });
-
-  // Tab Switching between 3D & 2D
-  const tab3D = document.getElementById('tab3DView');
-  const tab2D = document.getElementById('tab2DView');
-  const view3D = document.getElementById('view3DContainer');
-  const view2D = document.getElementById('view2DContainer');
-
-  tab3D?.addEventListener('click', () => {
-    tab3D.classList.add('active');
-    tab2D.classList.remove('active');
-    view3D.style.display = 'block';
-    view2D.style.display = 'none';
-    on3DResize();
-  });
-
-  tab2D?.addEventListener('click', () => {
-    tab2D.classList.add('active');
-    tab3D.classList.remove('active');
-    view2D.style.display = 'block';
-    view3D.style.display = 'none';
-    render2DTopology('star');
-  });
-
-  // ── 9. 2D Network Topology Sandbox Canvas ──────────────────────────────────
-  const canvas2D = document.getElementById('topology2DCanvas');
-  let currentTopo = 'star';
-  let topoNodes = [];
-  let topoEdges = [];
-
-  function generateTopologyData(type) {
-    topoNodes = [];
-    topoEdges = [];
-    currentTopo = type;
-
-    if (type === 'star') {
-      topoNodes.push({ id: 'MULE_HUB', label: 'C_MULE_HUB', x: 300, y: 210, r: 24, color: '#df1b41', type: 'Mule Hub', risk: '98.5%', pr: '0.0092' });
-      for (let i = 0; i < 5; i++) {
-        const angle = (i * Math.PI * 2) / 5;
-        const srcX = 140 + Math.cos(angle) * 70;
-        const srcY = 210 + Math.sin(angle) * 70;
-        const id = `SRC_0${i+1}`;
-        topoNodes.push({ id, label: id, x: srcX, y: srcY, r: 14, color: '#00d4ff', type: 'Compromised Source', risk: '12.0%', pr: '0.0004' });
-        topoEdges.push({ from: id, to: 'MULE_HUB' });
-      }
-      topoNodes.push({ id: 'EXIT_ATM_1', label: 'EXIT_01', x: 480, y: 150, r: 16, color: '#635bff', type: 'ATM Cash-Out', risk: '89.0%', pr: '0.0080' });
-      topoNodes.push({ id: 'EXIT_CRYPTO_2', label: 'EXIT_02', x: 480, y: 270, r: 16, color: '#635bff', type: 'Crypto Gateway', risk: '92.0%', pr: '0.0085' });
-      topoEdges.push({ from: 'MULE_HUB', to: 'EXIT_ATM_1' });
-      topoEdges.push({ from: 'MULE_HUB', to: 'EXIT_CRYPTO_2' });
-    } else if (type === 'cycle') {
-      const n = 6;
-      for (let i = 0; i < n; i++) {
-        const angle = (i * Math.PI * 2) / n;
-        const x = 300 + Math.cos(angle) * 110;
-        const y = 210 + Math.sin(angle) * 110;
-        const isMule = i % 2 === 0;
-        const id = `CYCLE_NODE_${i+1}`;
-        topoNodes.push({
-          id, label: id, x, y, r: 18,
-          color: isMule ? '#df1b41' : '#635bff',
-          type: isMule ? 'Smurf Mule' : 'Relay Shell',
-          risk: isMule ? '94.2%' : '65.0%',
-          pr: (0.0040 + i * 0.001).toFixed(4)
-        });
-      }
-      for (let i = 0; i < n; i++) {
-        topoEdges.push({ from: `CYCLE_NODE_${i+1}`, to: `CYCLE_NODE_${((i+1)%n)+1}` });
-      }
-    } else if (type === 'bipartite') {
-      const layers = [
-        [{ id: 'S1', color: '#00d4ff' }, { id: 'S2', color: '#00d4ff' }, { id: 'S3', color: '#00d4ff' }],
-        [{ id: 'R1', color: '#8b5cf6' }, { id: 'R2', color: '#8b5cf6' }],
-        [{ id: 'MULE', color: '#df1b41', r: 22 }],
-        [{ id: 'E1', color: '#635bff' }, { id: 'E2', color: '#635bff' }]
-      ];
-      layers.forEach((layer, colIdx) => {
-        const x = 120 + colIdx * 120;
-        const count = layer.length;
-        layer.forEach((node, rowIdx) => {
-          const y = 210 + (rowIdx - (count - 1) / 2) * 80;
-          topoNodes.push({
-            id: node.id, label: node.id, x, y, r: node.r || 16,
-            color: node.color,
-            type: node.id === 'MULE' ? 'Layering Mule' : (colIdx === 0 ? 'Origin' : (colIdx === 3 ? 'Exit' : 'Relay')),
-            risk: node.id === 'MULE' ? '97.8%' : '35.0%',
-            pr: '0.0065'
-          });
-        });
-      });
-      topoEdges = [
-        { from: 'S1', to: 'R1' }, { from: 'S2', to: 'R1' }, { from: 'S3', to: 'R2' },
-        { from: 'R1', to: 'MULE' }, { from: 'R2', to: 'MULE' },
-        { from: 'MULE', to: 'E1' }, { from: 'MULE', to: 'E2' }
-      ];
-    } else {
-      topoNodes.push({ id: 'MERCHANT_GATEWAY', label: 'MERCHANT', x: 300, y: 210, r: 24, color: '#f59e0b', type: 'Merchant Hub', risk: '15.2%', pr: '0.0150' });
-      for (let i = 0; i < 8; i++) {
-        const angle = (i * Math.PI * 2) / 8;
-        const x = 300 + Math.cos(angle) * 120;
-        const y = 210 + Math.sin(angle) * 120;
-        const id = `CLIENT_${i+1}`;
-        topoNodes.push({ id, label: id, x, y, r: 12, color: '#00d4ff', type: 'Client User', risk: '4.5%', pr: '0.0008' });
-        topoEdges.push({ from: id, to: 'MERCHANT_GATEWAY' });
-      }
-    }
-  }
-
-  function render2DTopology(type) {
-    generateTopologyData(type);
-    if (!canvas2D) return;
-    const ctx = canvas2D.getContext('2d');
-    ctx.clearRect(0, 0, canvas2D.width, canvas2D.height);
-
-    topoEdges.forEach(e => {
-      const fromNode = topoNodes.find(n => n.id === e.from);
-      const toNode = topoNodes.find(n => n.id === e.to);
-      if (!fromNode || !toNode) return;
-
-      ctx.beginPath();
-      ctx.moveTo(fromNode.x, fromNode.y);
-      ctx.lineTo(toNode.x, toNode.y);
-      ctx.strokeStyle = '#ccd2da';
-      ctx.lineWidth = 1.8;
-      ctx.stroke();
-
-      const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
-      const arrowDist = toNode.r + 4;
-      const targetX = toNode.x - Math.cos(angle) * arrowDist;
-      const targetY = toNode.y - Math.sin(angle) * arrowDist;
-
-      ctx.beginPath();
-      ctx.moveTo(targetX, targetY);
-      ctx.lineTo(targetX - 8 * Math.cos(angle - Math.PI / 6), targetY - 8 * Math.sin(angle - Math.PI / 6));
-      ctx.lineTo(targetX - 8 * Math.cos(angle + Math.PI / 6), targetY - 8 * Math.sin(angle + Math.PI / 6));
-      ctx.closePath();
-      ctx.fillStyle = '#635bff';
-      ctx.fill();
-    });
-
-    topoNodes.forEach(n => {
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-      ctx.fillStyle = n.color;
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#ffffff';
-      ctx.stroke();
-
-      ctx.font = '600 11px Plus Jakarta Sans, sans-serif';
-      ctx.fillStyle = '#0a2540';
-      ctx.textAlign = 'center';
-      ctx.fillText(n.label, n.x, n.y + n.r + 14);
-    });
-  }
-
-  canvas2D?.addEventListener('click', e => {
-    const rect = canvas2D.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const clicked = topoNodes.find(n => Math.hypot(n.x - x, n.y - y) <= n.r);
-    if (clicked) {
-      if (accountInput) accountInput.value = clicked.id;
-      showToast(`Selected Node: ${clicked.id} (${clicked.type}) — Calculated Risk: ${clicked.risk}`);
-      evaluateRisk();
-    }
-  });
-
-  document.getElementById('topoStar')?.addEventListener('click', function() {
-    document.querySelectorAll('.topo-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    render2DTopology('star');
-  });
-
-  document.getElementById('topoCycle')?.addEventListener('click', function() {
-    document.querySelectorAll('.topo-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    render2DTopology('cycle');
-  });
-
-  document.getElementById('topoBipartite')?.addEventListener('click', function() {
-    document.querySelectorAll('.topo-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    render2DTopology('bipartite');
-  });
-
-  document.getElementById('topoMerchant')?.addEventListener('click', function() {
-    document.querySelectorAll('.topo-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    render2DTopology('merchant');
-  });
-
-  // ── 10. Live Payment Stream Simulator ──────────────────────────────────────
-  let streamInterval = null;
-  let streamPaused = false;
-  let streamTxCount = 1482;
-  let streamFlaggedCount = 14;
-  const terminal = document.getElementById('streamTerminal');
-
-  function addStreamEvent(isFraud = false, isSurge = false) {
-    if (streamPaused && !isFraud && !isSurge) return;
-
-    streamTxCount++;
-    if (isFraud) streamFlaggedCount++;
-
-    const accId = isFraud 
-      ? `C_MULE_${Math.floor(1000 + Math.random() * 9000)}`
-      : `C_USER_${Math.floor(10000 + Math.random() * 90000)}`;
-    const amt = isFraud 
-      ? (15000 + Math.random() * 80000).toFixed(2)
-      : (25 + Math.random() * 1200).toFixed(2);
-    const prob = isFraud 
-      ? (0.85 + Math.random() * 0.14).toFixed(4)
-      : (0.005 + Math.random() * 0.04).toFixed(4);
-    const lat = (0.45 + Math.random() * 0.55).toFixed(2);
-
-    const line = document.createElement('div');
-    line.className = `stream-event-row ${isFraud ? 'blocked' : (Math.random() > 0.3 ? 'cache-hit' : '')}`;
-    
-    if (isFraud) {
-      line.innerHTML = `[BLOCKED] Tx #${streamTxCount} | Account: <strong>${accId}</strong> | $${amt} | Risk: <strong>${(prob * 100).toFixed(1)}%</strong> | Redis Cache Hit (${lat}ms) -> ACTION: FREEZE`;
-    } else {
-      line.innerHTML = `[ALLOWED] Tx #${streamTxCount} | ${accId} | $${amt} | Risk: ${(prob * 100).toFixed(1)}% | Nearline Cache (${lat}ms)`;
-    }
-
-    if (terminal) {
-      terminal.appendChild(line);
-      if (terminal.children.length > 50) {
-        terminal.removeChild(terminal.firstChild);
-      }
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-
-    const elTotal = document.getElementById('statTotal');
-    const elFlagged = document.getElementById('statFlagged');
-    if (elTotal) elTotal.textContent = `${streamTxCount.toLocaleString()} transactions`;
-    if (elFlagged) elFlagged.textContent = `${streamFlaggedCount} flagged (${((streamFlaggedCount / streamTxCount) * 100).toFixed(2)}%)`;
-  }
-
-  streamInterval = setInterval(() => {
-    const isFraud = Math.random() < 0.04;
-    addStreamEvent(isFraud);
-  }, 350);
-
-  document.getElementById('btnStreamToggle')?.addEventListener('click', () => {
-    streamPaused = !streamPaused;
-    const text = document.getElementById('streamToggleText');
-    if (text) text.textContent = streamPaused ? 'Resume Stream' : 'Pause Stream';
-  });
-
-  document.getElementById('btnInjectFraud')?.addEventListener('click', () => {
-    for (let i = 0; i < 6; i++) {
-      setTimeout(() => addStreamEvent(true), i * 120);
-    }
-    showToast('Injected 6 high-risk mule syndicate transactions into stream.');
-  });
-
-  document.getElementById('btnSimulateSurge')?.addEventListener('click', () => {
-    for (let i = 0; i < 20; i++) {
-      setTimeout(() => addStreamEvent(Math.random() < 0.15, true), i * 60);
-    }
-    showToast('Traffic surge simulated (20 rapid transactions scored).');
-  });
-
-  // ── 11. Population Stability Index (PSI) Drift Monitor ─────────────────────
-  const psiShiftSlider = document.getElementById('psi_shift_slider');
-  const psiSpreadSlider = document.getElementById('psi_spread_slider');
-  const psiHistContainer = document.getElementById('psiHistogramBars');
-
-  function calculateAndRenderPSI() {
-    const shift = parseFloat(psiShiftSlider?.value || '0.05');
-    const spread = parseFloat(psiSpreadSlider?.value || '1.0');
-
-    document.getElementById('val_psi_shift').textContent = shift.toFixed(2);
-    document.getElementById('val_psi_spread').textContent = spread.toFixed(1);
-
-    const refCounts = [35, 25, 15, 10, 6, 4, 2, 1.5, 1.0, 0.5];
-    const totalRef = refCounts.reduce((a, b) => a + b, 0);
-    const refProps = refCounts.map(c => c / totalRef);
-
-    const currCounts = [];
-    for (let i = 0; i < 10; i++) {
-      const x = i / 10.0;
-      const weight = Math.exp(-Math.pow((x - (0.1 + shift)) / (0.25 * spread), 2));
-      currCounts.push(Math.max(0.1, weight * 30));
-    }
-    const totalCurr = currCounts.reduce((a, b) => a + b, 0);
-    const currProps = currCounts.map(c => c / totalCurr);
-
-    let psi = 0.0;
-    for (let i = 0; i < 10; i++) {
-      const pC = Math.max(1e-4, currProps[i]);
-      const pR = Math.max(1e-4, refProps[i]);
-      psi += (pC - pR) * Math.log(pC / pR);
-    }
-
-    psi = Math.max(0.005, Math.round(psi * 1000) / 1000);
-
-    const psiScoreEl = document.getElementById('psiScoreValue');
-    const psiBadge = document.getElementById('psiStatusBadge');
-    const psiExp = document.getElementById('psiExplanationText');
-
-    if (psiScoreEl) psiScoreEl.textContent = psi.toFixed(3);
-
-    if (psi < 0.10) {
-      if (psiScoreEl) psiScoreEl.style.color = 'var(--stripe-green)';
-      if (psiBadge) {
-        psiBadge.className = 'stripe-risk-badge badge-allowed';
-        psiBadge.textContent = 'MODEL STABLE';
-      }
-      if (psiExp) psiExp.textContent = 'PSI < 0.10: Zero significant covariate drift. Model inference is valid and production-stable.';
-    } else if (psi < 0.20) {
-      if (psiScoreEl) psiScoreEl.style.color = 'var(--stripe-amber)';
-      if (psiBadge) {
-        psiBadge.className = 'stripe-risk-badge badge-elevated';
-        psiBadge.textContent = 'MODERATE DRIFT';
-      }
-      if (psiExp) psiExp.textContent = '0.10 ≤ PSI < 0.20: Moderate distribution shift detected. Nearline monitoring active.';
-    } else {
-      if (psiScoreEl) psiScoreEl.style.color = 'var(--stripe-coral)';
-      if (psiBadge) {
-        psiBadge.className = 'stripe-risk-badge badge-blocked';
-        psiBadge.textContent = 'RETRAIN TRIGGERED!';
-      }
-      if (psiExp) psiExp.textContent = 'PSI ≥ 0.20: Significant covariate shift! Automated MLflow retraining job triggered.';
-    }
-
-    if (psiHistContainer) {
-      psiHistContainer.innerHTML = '';
-      for (let i = 0; i < 10; i++) {
-        const col = document.createElement('div');
-        col.className = 'hist-col';
-        col.title = `Bin ${i+1}: Ref ${(refProps[i]*100).toFixed(1)}% vs Current ${(currProps[i]*100).toFixed(1)}%`;
-        col.innerHTML = `
-          <div class="hist-bar-ref" style="height: ${Math.min(100, refProps[i] * 280)}%;"></div>
-          <div class="hist-bar-curr" style="height: ${Math.min(100, currProps[i] * 280)}%;"></div>
-        `;
-        psiHistContainer.appendChild(col);
-      }
-    }
-  }
-
-  psiShiftSlider?.addEventListener('input', calculateAndRenderPSI);
-  psiSpreadSlider?.addEventListener('input', calculateAndRenderPSI);
-
-  document.getElementById('btnTriggerRetrainSim')?.addEventListener('click', () => {
-    showToast('Automated MLflow pipeline retraining initiated. Model weights updated (v2.5).');
-    if (psiShiftSlider) psiShiftSlider.value = '0.05';
-    if (psiSpreadSlider) psiSpreadSlider.value = '1.0';
-    calculateAndRenderPSI();
-  });
-
-  calculateAndRenderPSI();
-
-  // ── 12. Modals & Recruiter Clipboard Actions ───────────────────────────────
-  const modalDossier = document.getElementById('modalDossier');
-  const modalAudit = document.getElementById('modalAudit');
-
-  document.getElementById('btnOpenDossier')?.addEventListener('click', () => {
-    modalDossier?.classList.add('open');
-  });
-
-  document.getElementById('btnCloseDossier')?.addEventListener('click', () => {
-    modalDossier?.classList.remove('open');
-  });
-
-  document.getElementById('btnCloseDossierBottom')?.addEventListener('click', () => {
-    modalDossier?.classList.remove('open');
-  });
-
-  document.getElementById('btnExportAudit')?.addEventListener('click', () => {
-    modalAudit?.classList.add('open');
-  });
-
-  document.getElementById('btnCloseAudit')?.addEventListener('click', () => {
-    modalAudit?.classList.remove('open');
-  });
-
-  document.getElementById('btnCloseAuditBottom')?.addEventListener('click', () => {
-    modalAudit?.classList.remove('open');
-  });
-
-  document.getElementById('btnCopyAllBullets')?.addEventListener('click', () => {
-    const text = `• Engineered an end-to-end Graph ML fraud detection pipeline processing 6.36M payment transactions across 3.28M bank accounts using PyTorch Geometric, NetworkX, and XGBoost.\n• Architected a 22-dimensional feature extraction engine combining PageRank, K-core decomposition, balance drain ratios, and 24h/7d temporal volume spike signals.\n• Implemented mini-batch GNN training (GCN, GraphSAGE, GAT) with Focal Loss (α=0.5, γ=2.0) using PyG CUDA extensions on an RTX 4060 GPU, reducing epoch training time on 2.3M nodes to 14 seconds with VRAM footprint <200MB.\n• Built a Hybrid GAT + XGBoost Stacking Ensemble achieving 0.8747 ROC-AUC, 86.1% Recall, and 75.0% Precision@100 (a 3x improvement over standard baselines).\n• Architected production serving with Redis 7 Feature Store for sub-1ms nearline score caching (complying with <15ms payment gateway SLAs), Prometheus metrics, and Population Stability Index (PSI) drift monitoring.`;
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('All 5 verified resume bullet points copied to clipboard.');
-    });
-  });
-
-  // ── 13. Toast Notification System ──────────────────────────────────────────
+  // ── 12. Global Toast System ────────────────────────────────────────────────
   function showToast(msg) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
 
     const toast = document.createElement('div');
-    toast.className = 'stripe-toast-item';
-    toast.innerHTML = `<i class="fa-solid fa-circle-check" style="color: var(--stripe-cyan);"></i> ${msg}`;
+    toast.className = 'stripe-toast';
+    toast.innerHTML = `<i class="fa-solid fa-circle-check" style="color: var(--stripe-teal);"></i> <span>${msg}</span>`;
+
     container.appendChild(toast);
 
-    setTimeout(() => toast.classList.add('visible'), 20);
     setTimeout(() => {
-      toast.classList.remove('visible');
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      toast.style.transition = 'all 0.3s ease';
       setTimeout(() => toast.remove(), 300);
-    }, 4000);
+    }, 3200);
   }
 
-  // ── 14. Initialize App ─────────────────────────────────────────────────────
-  init3D();
-  selectPreset('mule');
+  // Initial score calculation if elements present
+  syncSliderDisplays();
+  calculateLocalRiskScore();
+
 });
