@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "name": "radar-3d-fraud-defense",
+  "cleanUrls": true,
+  "outputDirectory": "web",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/web/$1" }
+  ]
+}
