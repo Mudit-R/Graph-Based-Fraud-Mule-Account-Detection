@@ -1659,7 +1659,7 @@ input[type="text"]:focus {
   margin-top: 4px;
 }
 
-/* ── Modals (Recruiter Dossier & AML Audit) ───────────────────────────────── */
+/* ── Modals (AML Compliance Audit) ────────────────────────────────────────── */
 .stripe-modal-backdrop {
   position: fixed;
   top: 0;
@@ -1732,25 +1732,6 @@ input[type="text"]:focus {
   display: flex;
   flex-direction: column;
   gap: 20px;
-}
-
-.dossier-box {
-  background: var(--stripe-bg-light);
-  border: 1px solid var(--stripe-border);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.dossier-item {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--stripe-slate);
-  line-height: 1.55;
 }
 
 /* ── Toast Notifications ─────────────────────────────────────────────────── */

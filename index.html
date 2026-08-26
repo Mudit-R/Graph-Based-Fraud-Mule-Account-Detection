@@ -55,10 +55,6 @@
         </ul>
 
         <div class="stripe-nav-actions">
-          <button class="stripe-btn btn-glass" id="btnOpenDossier">
-            Recruiter Dossier <i class="fa-solid fa-arrow-right"></i>
-          </button>
-
           <a href="console.html" class="stripe-btn btn-blurple">
             Launch Console <i class="fa-solid fa-arrow-right"></i>
           </a>
@@ -560,9 +556,6 @@
         <a href="console.html" class="stripe-btn btn-white btn-lg">
           Launch Radar Console <i class="fa-solid fa-arrow-right"></i>
         </a>
-        <button class="stripe-btn btn-glass btn-lg" id="btnOpenDossierBottom">
-          View Recruiter Dossier
-        </button>
       </div>
     </section>
 
@@ -611,7 +604,6 @@
         <ul class="footer-links-list">
           <li><a href="https://github.com/Mudit-R/Graph-Based-Fraud-Mule-Account-Detection" target="_blank">GitHub Repository</a></li>
           <li><a href="#" id="btnOpenAuditFooter">Export Audit Docket</a></li>
-          <li><a href="#" id="btnOpenDossierFooter">Recruiter Dossier</a></li>
         </ul>
       </div>
     </div>
@@ -627,58 +619,7 @@
   </footer>
 
   <!-- ═════════════════════════════════════════════════════════════════════════
-       MODAL 1: Recruiter Executive Dossier & Bullet Points
-       ═════════════════════════════════════════════════════════════════════════ -->
-  <div class="stripe-modal-backdrop" id="modalDossier">
-    <div class="stripe-modal-card">
-      <div class="modal-head">
-        <h2><i class="fa-solid fa-file-lines" style="color: var(--stripe-blurple);"></i> Recruiter Executive Dossier</h2>
-        <button class="btn-modal-close" id="btnCloseDossier">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <h3 style="font-size: 16px; font-weight: 700; color: var(--stripe-navy);">Verified Technical Achievements</h3>
-            <p style="font-size: 12px; color: var(--stripe-muted);">Ready-to-copy bullet points for hiring managers & recruiters.</p>
-          </div>
-          <button class="stripe-btn btn-blurple" id="btnCopyAllBullets">
-            <i class="fa-solid fa-copy"></i> Copy All 5 Bullet Points
-          </button>
-        </div>
-
-        <div class="dossier-box">
-          <div class="dossier-item">
-            <span style="color: var(--stripe-blurple); font-weight: 700;">&bull;</span>
-            <span>Engineered an end-to-end Graph ML fraud detection pipeline processing <strong>6.36M payment transactions</strong> across <strong>3.28M bank accounts</strong> using PyTorch Geometric, NetworkX, and XGBoost.</span>
-          </div>
-          <div class="dossier-item">
-            <span style="color: var(--stripe-blurple); font-weight: 700;">&bull;</span>
-            <span>Architected a <strong>22-dimensional feature extraction engine</strong> combining PageRank, K-core decomposition, balance drain ratios, and 24h/7d temporal volume spike signals.</span>
-          </div>
-          <div class="dossier-item">
-            <span style="color: var(--stripe-blurple); font-weight: 700;">&bull;</span>
-            <span>Implemented mini-batch GNN training (GCN, GraphSAGE, GAT) with <strong>Focal Loss (α=0.5, γ=2.0)</strong> using PyG CUDA extensions on an RTX 4060 GPU, reducing epoch training time on 2.3M nodes to <strong>14 seconds</strong> with VRAM footprint &lt;200MB.</span>
-          </div>
-          <div class="dossier-item">
-            <span style="color: var(--stripe-blurple); font-weight: 700;">&bull;</span>
-            <span>Built a <strong>Hybrid GAT + XGBoost Stacking Ensemble</strong> achieving <strong>0.8747 ROC-AUC, 86.1% Recall</strong>, and <strong>75.0% Precision@100</strong> (a 3x improvement over standard baselines).</span>
-          </div>
-          <div class="dossier-item">
-            <span style="color: var(--stripe-blurple); font-weight: 700;">&bull;</span>
-            <span>Architected production serving with <strong>Redis 7 Feature Store</strong> for sub-1ms nearline score caching (complying with &lt;15ms payment gateway SLAs), <strong>Prometheus metrics</strong>, and <strong>Population Stability Index (PSI)</strong> drift monitoring.</span>
-          </div>
-        </div>
-
-        <div style="border-top: 1px solid var(--stripe-border); padding-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <span style="font-size: 12px; color: var(--stripe-slate);">GitHub Repository: <a href="https://github.com/Mudit-R/Graph-Based-Fraud-Mule-Account-Detection" target="_blank">Mudit-R/Graph-Based-Fraud-Mule-Account-Detection</a></span>
-          <button class="stripe-btn btn-white" id="btnCloseDossierBottom">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═════════════════════════════════════════════════════════════════════════
-       MODAL 2: Exportable Compliance Audit Report
+       MODAL 1: Exportable Compliance Audit Report
        ═════════════════════════════════════════════════════════════════════════ -->
   <div class="stripe-modal-backdrop" id="modalAudit">
     <div class="stripe-modal-card">

@@ -1172,24 +1172,14 @@ print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
   }
   initPsiSandbox();
 
-  // ── 11. Recruiter Dossier & AML Audit Modals ─────────────────────────────────
+  // ── 11. AML Compliance Audit Modal ──────────────────────────────────────────
   function initModals() {
-    const modalDossier = document.getElementById('modalDossier');
     const modalAudit = document.getElementById('modalAudit');
-
-    const btnOpenDossier = document.getElementById('btnOpenDossier');
-    const btnOpenDossierBottom = document.getElementById('btnOpenDossierBottom');
-    const btnOpenDossierFooter = document.getElementById('btnOpenDossierFooter');
-
-    const btnCloseDossier = document.getElementById('btnCloseDossier');
-    const btnCloseDossierBottom = document.getElementById('btnCloseDossierBottom');
 
     const btnOpenAudit = document.getElementById('btnExportAudit');
     const btnOpenAuditFooter = document.getElementById('btnOpenAuditFooter');
     const btnCloseAudit = document.getElementById('btnCloseAudit');
     const btnCloseAuditBottom = document.getElementById('btnCloseAuditBottom');
-
-    const btnCopyBullets = document.getElementById('btnCopyAllBullets');
 
     function openModal(m) {
       if (m) m.classList.add('active');
@@ -1199,14 +1189,6 @@ print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
       if (m) m.classList.remove('active');
     }
 
-    [btnOpenDossier, btnOpenDossierBottom, btnOpenDossierFooter].forEach(b => {
-      if (b) b.addEventListener('click', (e) => { e.preventDefault(); openModal(modalDossier); });
-    });
-
-    [btnCloseDossier, btnCloseDossierBottom].forEach(b => {
-      if (b) b.addEventListener('click', () => closeModal(modalDossier));
-    });
-
     [btnOpenAudit, btnOpenAuditFooter].forEach(b => {
       if (b) b.addEventListener('click', (e) => { e.preventDefault(); openModal(modalAudit); });
     });
@@ -1215,24 +1197,9 @@ print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
       if (b) b.addEventListener('click', () => closeModal(modalAudit));
     });
 
-    [modalDossier, modalAudit].forEach(m => {
-      if (m) {
-        m.addEventListener('click', (e) => {
-          if (e.target === m) closeModal(m);
-        });
-      }
-    });
-
-    if (btnCopyBullets) {
-      btnCopyBullets.addEventListener('click', () => {
-        const bulletsText = `• Engineered an end-to-end Graph ML fraud detection pipeline processing 6.36M payment transactions across 3.28M bank accounts using PyTorch Geometric, NetworkX, and XGBoost.
-• Architected a 22-dimensional feature extraction engine combining PageRank, K-core decomposition, balance drain ratios, and 24h/7d temporal volume spike signals.
-• Implemented mini-batch GNN training (GCN, GraphSAGE, GAT) with Focal Loss (α=0.5, γ=2.0) using PyG CUDA extensions on an RTX 4060 GPU, reducing epoch training time on 2.3M nodes to 14 seconds with VRAM footprint <200MB.
-• Built a Hybrid GAT + XGBoost Stacking Ensemble achieving 0.8747 ROC-AUC, 86.1% Recall, and 75.0% Precision@100 (a 3x improvement over standard baselines).
-• Architected production serving with Redis 7 Feature Store for sub-1ms nearline score caching (complying with <15ms payment gateway SLAs), Prometheus metrics, and Population Stability Index (PSI) drift monitoring.`;
-
-        navigator.clipboard.writeText(bulletsText);
-        showToast('All 5 recruiter resume bullet points copied to clipboard!');
+    if (modalAudit) {
+      modalAudit.addEventListener('click', (e) => {
+        if (e.target === modalAudit) closeModal(modalAudit);
       });
     }
   }
