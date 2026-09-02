@@ -31,6 +31,9 @@ except ImportError:
     redis = None  # type: ignore
 
 
+import socket
+
+
 class RedisFeatureStore:
     """
     High-performance Redis client for Feature Store & GNN Score Caching.
@@ -43,7 +46,7 @@ class RedisFeatureStore:
         port: int = 6379,
         db: int = 0,
         password: Optional[str] = None,
-        socket_timeout: float = 1.0,
+        socket_timeout: float = 0.2,
         enable_fallback: bool = True,
     ) -> None:
         self.host = host
@@ -54,7 +57,15 @@ class RedisFeatureStore:
         self._memory_cache: Dict[str, Tuple[Any, float]] = {}  # key -> (value, expire_at)
         self.is_connected = False
 
-        if REDIS_INSTALLED:
+        # Fast socket probe before attempting redis connect
+        port_open = False
+        try:
+            with socket.create_connection((host, port), timeout=0.15):
+                port_open = True
+        except (socket.timeout, ConnectionRefusedError, OSError):
+            port_open = False
+
+        if REDIS_INSTALLED and port_open:
             try:
                 client = redis.Redis(
                     host=host,

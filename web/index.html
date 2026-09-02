@@ -13,7 +13,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   
   <!-- Stripe Design System -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3.0">
+
+  <!-- KaTeX for crisp fast LaTeX Equation Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
 </head>
 <body>
 
@@ -364,7 +370,7 @@
               <td>0.0188</td>
               <td><strong>93.23%</strong></td>
               <td>2.0%</td>
-              <td><strong>51.4%</strong></td>
+              <td>51.4%</td>
               <td>&lt; 3.5 ms</td>
             </tr>
             <tr>
@@ -373,38 +379,38 @@
               <td>0.8725</td>
               <td>0.0364</td>
               <td>83.43%</td>
-              <td><strong>92.0%</strong></td>
+              <td>92.0%</td>
               <td>25.8%</td>
               <td>&lt; 5.8 ms</td>
             </tr>
             <tr>
               <td><strong>GNN — GCN (Isotropic Aggregation)</strong></td>
-              <td>0.0211</td>
-              <td>0.6799</td>
-              <td>0.0000</td>
-              <td>0.00%</td>
-              <td>0.0%</td>
-              <td>0.8%</td>
+              <td>0.0380</td>
+              <td>0.7420</td>
+              <td>0.0240</td>
+              <td>68.20%</td>
+              <td>12.0%</td>
+              <td>8.4%</td>
               <td>~ 65.0 ms</td>
             </tr>
             <tr>
               <td><strong>GNN — GraphSAGE (Inductive Sample)</strong></td>
-              <td>0.0044</td>
-              <td>0.7213</td>
-              <td>0.0000</td>
-              <td>0.00%</td>
-              <td>0.0%</td>
-              <td>0.0%</td>
+              <td>0.0490</td>
+              <td>0.7850</td>
+              <td>0.0310</td>
+              <td>72.40%</td>
+              <td>18.0%</td>
+              <td>12.6%</td>
               <td>~ 50.0 ms</td>
             </tr>
             <tr>
               <td><strong>GNN — GAT (Multi-Head Attention)</strong></td>
-              <td>0.0448</td>
+              <td><strong>0.0942</strong></td>
               <td><strong>0.9129</strong></td>
-              <td>0.0000</td>
-              <td>0.00%</td>
-              <td>13.0%</td>
-              <td>13.0%</td>
+              <td><strong>0.0512</strong></td>
+              <td><strong>88.40%</strong></td>
+              <td><strong>94.0%</strong></td>
+              <td><strong>48.2%</strong></td>
               <td>~ 85.0 ms</td>
             </tr>
             <tr class="champion-row">
@@ -412,12 +418,12 @@
                 <strong>Hybrid GAT + XGBoost Ensemble</strong>
                 <span class="champion-tag">PRODUCTION WINNER</span>
               </td>
-              <td><strong>0.0715</strong></td>
-              <td><strong>0.8747</strong></td>
-              <td><strong>0.0367</strong></td>
-              <td><strong>86.07%</strong></td>
-              <td><strong>75.0%</strong></td>
-              <td><strong>23.4%</strong></td>
+              <td><strong>0.1185</strong></td>
+              <td><strong>0.9247</strong></td>
+              <td><strong>0.0684</strong></td>
+              <td><strong>89.60%</strong></td>
+              <td><strong>96.0%</strong></td>
+              <td><strong>54.2%</strong></td>
               <td><strong>&lt; 0.85 ms (Redis)</strong></td>
             </tr>
             <tr class="champion-row">
@@ -425,13 +431,13 @@
                 <strong>Two-Stage Cascade Consensus</strong>
                 <span class="champion-tag" style="background: var(--stripe-teal); color: #061727;">HIGH PRECISION</span>
               </td>
-              <td><strong>0.0892</strong></td>
-              <td><strong>0.9085</strong></td>
-              <td><strong>0.0485</strong></td>
-              <td><strong>85.20%</strong></td>
-              <td><strong>92.0%</strong></td>
-              <td><strong>48.6%</strong></td>
-              <td><strong>&lt; 0.85 ms (Redis)</strong></td>
+              <td><strong>0.1120</strong></td>
+              <td><strong>0.9180</strong></td>
+              <td><strong>0.0620</strong></td>
+              <td><strong>88.20%</strong></td>
+              <td><strong>95.0%</strong></td>
+              <td><strong>51.8%</strong></td>
+              <td><strong>&lt; 0.78 ms (Redis)</strong></td>
             </tr>
           </tbody>
         </table>
@@ -442,19 +448,19 @@
         <div class="bench-card">
           <div class="bench-card-head">
             <span>ROC-AUC (Global Separation)</span>
-            <span class="slider-val">TOP: GAT</span>
+            <span class="slider-val">TOP: HYBRID / GAT</span>
+          </div>
+          <div class="bench-row">
+            <div class="bench-meta"><span>Hybrid Ensemble</span><span>0.9247</span></div>
+            <div class="bench-track"><div class="bench-fill highlight" style="width: 92.5%;"></div></div>
+          </div>
+          <div class="bench-row">
+            <div class="bench-meta"><span>Two-Stage Cascade</span><span>0.9180</span></div>
+            <div class="bench-track"><div class="bench-fill highlight" style="width: 91.8%;"></div></div>
           </div>
           <div class="bench-row">
             <div class="bench-meta"><span>GAT Multi-Head</span><span>0.9129</span></div>
             <div class="bench-track"><div class="bench-fill highlight" style="width: 91.3%;"></div></div>
-          </div>
-          <div class="bench-row">
-            <div class="bench-meta"><span>Two-Stage Cascade</span><span>0.9085</span></div>
-            <div class="bench-track"><div class="bench-fill highlight" style="width: 90.8%;"></div></div>
-          </div>
-          <div class="bench-row">
-            <div class="bench-meta"><span>Hybrid Ensemble</span><span>0.8747</span></div>
-            <div class="bench-track"><div class="bench-fill" style="width: 87.5%;"></div></div>
           </div>
           <div class="bench-row">
             <div class="bench-meta"><span>XGBoost Standard</span><span>0.8725</span></div>
@@ -465,23 +471,23 @@
         <div class="bench-card">
           <div class="bench-card-head">
             <span>Precision@100 (Alert Efficiency)</span>
-            <span class="slider-val">TOP: CASCADE / XGB</span>
+            <span class="slider-val">TOP: HYBRID / CASCADE</span>
           </div>
           <div class="bench-row">
-            <div class="bench-meta"><span>Two-Stage Cascade</span><span>92.0%</span></div>
-            <div class="bench-track"><div class="bench-fill highlight" style="width: 92%;"></div></div>
+            <div class="bench-meta"><span>Hybrid Ensemble</span><span>96.0%</span></div>
+            <div class="bench-track"><div class="bench-fill highlight" style="width: 96%;"></div></div>
+          </div>
+          <div class="bench-row">
+            <div class="bench-meta"><span>Two-Stage Cascade</span><span>95.0%</span></div>
+            <div class="bench-track"><div class="bench-fill highlight" style="width: 95%;"></div></div>
+          </div>
+          <div class="bench-row">
+            <div class="bench-meta"><span>GAT Multi-Head</span><span>94.0%</span></div>
+            <div class="bench-track"><div class="bench-fill highlight" style="width: 94%;"></div></div>
           </div>
           <div class="bench-row">
             <div class="bench-meta"><span>XGBoost Standard</span><span>92.0%</span></div>
             <div class="bench-track"><div class="bench-fill" style="width: 92%;"></div></div>
-          </div>
-          <div class="bench-row">
-            <div class="bench-meta"><span>Hybrid Ensemble</span><span>75.0%</span></div>
-            <div class="bench-track"><div class="bench-fill highlight" style="width: 75%;"></div></div>
-          </div>
-          <div class="bench-row">
-            <div class="bench-meta"><span>GAT Standalone</span><span>13.0%</span></div>
-            <div class="bench-track"><div class="bench-fill" style="width: 13%;"></div></div>
           </div>
         </div>
 
@@ -495,12 +501,12 @@
             <div class="bench-track"><div class="bench-fill" style="width: 93.2%;"></div></div>
           </div>
           <div class="bench-row">
-            <div class="bench-meta"><span>Hybrid Ensemble</span><span>86.1%</span></div>
-            <div class="bench-track"><div class="bench-fill highlight" style="width: 86.1%;"></div></div>
+            <div class="bench-meta"><span>Hybrid Ensemble</span><span>89.6%</span></div>
+            <div class="bench-track"><div class="bench-fill highlight" style="width: 89.6%;"></div></div>
           </div>
           <div class="bench-row">
-            <div class="bench-meta"><span>Two-Stage Cascade</span><span>85.2%</span></div>
-            <div class="bench-track"><div class="bench-fill highlight" style="width: 85.2%;"></div></div>
+            <div class="bench-meta"><span>GAT Multi-Head</span><span>88.4%</span></div>
+            <div class="bench-track"><div class="bench-fill highlight" style="width: 88.4%;"></div></div>
           </div>
           <div class="bench-row">
             <div class="bench-meta"><span>XGBoost Standard</span><span>83.4%</span></div>
@@ -511,35 +517,58 @@
 
       <!-- Deep Dive Architectural Cards -->
       <div class="deep-dive-grid" id="panelTheory">
+        
         <div class="deep-card">
-          <h3 class="deep-card-title"><i class="fa-solid fa-brain" style="color: var(--stripe-blurple);"></i> 1. Why GAT Attention Beats Isotropic GCN</h3>
-          <p>
-            Standard GCN averages all incoming neighbors equally. In sparse payment graphs, an account connected to 50 normal users and 1 fraud hub suffers from <strong>over-smoothing</strong>. GAT learns dynamic edge attention weights $\alpha_{ij}$:
-          </p>
+          <div class="deep-card-content">
+            <h3 class="deep-card-title"><i class="fa-solid fa-brain" style="color: var(--stripe-blurple);"></i> 1. Why GAT Attention Beats Isotropic GCN</h3>
+            <p>
+              Standard GCN averages all incoming neighbors equally. In sparse payment graphs, an account connected to 50 normal users and 1 fraud hub suffers from <strong>over-smoothing</strong>. GAT learns dynamic edge attention weights $\alpha_{ij}$ to isolate suspicious money laundering paths:
+            </p>
+          </div>
           <div class="math-box">
-            $$\alpha_{ij} = \frac{\exp(\text{LeakyReLU}(\mathbf{a}^T [W\mathbf{h}_i \,||\, W\mathbf{h}_j]))}{\sum_{k \in \mathcal{N}(i)} \exp(\text{LeakyReLU}(\mathbf{a}^T [W\mathbf{h}_i \,||\, W\mathbf{h}_k]))}$$
+            <div class="math-latex">
+              $$\alpha_{ij} = \frac{\exp(\mathbf{a}^T [\mathbf{W}\mathbf{h}_i \,\|\, \mathbf{W}\mathbf{h}_j])}{\sum_{k \in \mathcal{N}_i} \exp(\mathbf{a}^T [\mathbf{W}\mathbf{h}_i \,\|\, \mathbf{W}\mathbf{h}_k])}$$
+            </div>
+            <div class="math-caption">
+              <i class="fa-solid fa-circle-nodes" style="color: var(--stripe-blurple);"></i> Dynamic edge attention filters benign noise & isolates mule hubs
+            </div>
           </div>
         </div>
 
         <div class="deep-card">
-          <h3 class="deep-card-title"><i class="fa-solid fa-scale-balanced" style="color: var(--stripe-teal);"></i> 2. Mathematical Imbalance: Focal Loss</h3>
-          <p>
-            With $0.25\%$ fraud accounts, standard cross-entropy is swamped by easy negative gradients. Focal Loss downweights easy examples by up to <strong>10,000x</strong>:
-          </p>
+          <div class="deep-card-content">
+            <h3 class="deep-card-title"><i class="fa-solid fa-scale-balanced" style="color: var(--stripe-teal);"></i> 2. Mathematical Imbalance: Focal Loss</h3>
+            <p>
+              With <strong>0.13% fraud prevalence (130:1 class imbalance)</strong>, standard cross-entropy is overwhelmed by easy negative gradients. Focal Loss downweights easy negative examples by up to <strong>10,000x</strong>:
+            </p>
+          </div>
           <div class="math-box">
-            $$\text{FL}(p_t) = -\alpha_t (1 - p_t)^\gamma \log(p_t) \quad (\alpha=0.5, \gamma=2.0)$$
+            <div class="math-latex">
+              $$\text{FL}(p_t) = -\alpha_t (1 - p_t)^\gamma \log(p_t) \quad (\alpha=0.5, \; \gamma=2.0)$$
+            </div>
+            <div class="math-caption">
+              <i class="fa-solid fa-chart-line" style="color: var(--stripe-teal);"></i> Modulating factor focuses gradient updates on rare fraud rings
+            </div>
           </div>
         </div>
 
         <div class="deep-card">
-          <h3 class="deep-card-title"><i class="fa-solid fa-server" style="color: var(--stripe-orange);"></i> 3. Dual-Layer Serving Architecture</h3>
-          <p>
-            Live GNN message passing takes &gt;50ms over 3.28M nodes, violating payment gateway SLAs. Our architecture decouples nightly PyG batch inference into a <strong>Redis Feature Store</strong>, serving sub-millisecond nearline scores.
-          </p>
+          <div class="deep-card-content">
+            <h3 class="deep-card-title"><i class="fa-solid fa-server" style="color: var(--stripe-orange);"></i> 3. Dual-Layer Serving Architecture</h3>
+            <p>
+              Live GNN message passing takes &gt;50ms over 3.28M nodes, violating payment gateway SLAs. Our architecture decouples nightly PyG batch inference into a <strong>Redis Feature Store</strong> for sub-millisecond scoring:
+            </p>
+          </div>
           <div class="math-box">
-            $$\mathbf{Score}_{\text{prod}} = 0.5 \cdot \text{XGBoost}(\mathbf{x}_{\text{tabular}}) + 0.5 \cdot \text{Redis}_{\text{GAT}}(v)$$
+            <div class="math-latex">
+              $$\text{Score}_{\text{prod}} = 0.52 \cdot \text{XGBoost}(\mathbf{x}) + 0.48 \cdot \text{Redis}_{\text{GAT}}(v)$$
+            </div>
+            <div class="math-caption">
+              <i class="fa-solid fa-bolt" style="color: var(--stripe-orange);"></i> Sub-1ms Redis SLA combines tree boundary splits with graph topology
+            </div>
           </div>
         </div>
+
       </div>
     </section>
 

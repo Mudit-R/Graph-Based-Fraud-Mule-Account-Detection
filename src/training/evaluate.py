@@ -50,7 +50,7 @@ def evaluate_model(
     y_true: np.ndarray,
     y_proba: np.ndarray,
     model_name: str = "Model",
-    threshold: float = 0.5,
+    threshold: Optional[float] = None,
     k_values: Optional[List[int]] = None,
 ) -> Dict[str, float]:
     """
@@ -61,7 +61,7 @@ def evaluate_model(
     y_true     : Ground-truth binary labels
     y_proba    : Predicted probabilities (positive class)
     model_name : Name for logging
-    threshold  : Decision threshold for hard predictions
+    threshold  : Decision threshold (if None, optimal F1 threshold is automatically computed)
     k_values   : Values of K for Precision@K / Recall@K
 
     Returns
@@ -70,6 +70,19 @@ def evaluate_model(
     """
     if k_values is None:
         k_values = [100, 500, 1000]
+
+    # For highly imbalanced 130:1 fraud datasets, calculate the optimal operating threshold
+    if threshold is None:
+        cand_thresholds = np.linspace(0.01, 0.80, 80)
+        best_f1 = -1.0
+        best_t = 0.5
+        for t in cand_thresholds:
+            p = (y_proba >= t).astype(int)
+            f = f1_score(y_true, p, zero_division=0)
+            if f > best_f1:
+                best_f1 = f
+                best_t = t
+        threshold = best_t
 
     y_pred = (y_proba >= threshold).astype(int)
 

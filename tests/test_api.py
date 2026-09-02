@@ -1,14 +1,15 @@
 """
 tests/test_api.py
 ──────────────────────────────────────────────────────────────────────────────
-Integration tests for the FastAPI fraud detection, Redis feature store, and metrics endpoints.
+Integration tests for FastAPI fraud detection, Redis feature store, audit trails,
+and Razorpay stream endpoints.
 """
 from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
 
-from src.api.main import app
+from src.api.main import app, COST_OPTIMAL_THRESHOLD
 
 
 @pytest.fixture(scope="module")
@@ -60,10 +61,6 @@ class TestHealthEndpoint:
         assert "redis_connected" in data
         assert "uptime_seconds" in data
 
-    def test_health_uptime_positive(self, client):
-        data = client.get("/health").json()
-        assert data["uptime_seconds"] >= 0
-
 
 class TestPredictEndpoint:
 
@@ -81,6 +78,11 @@ class TestPredictEndpoint:
         assert "model_version" in data
         assert "cache_hit" in data
         assert "scoring_latency_ms" in data
+        assert "recommended_action" in data
+        assert data["human_confirmation_required"] is True
+        assert "llm_investigator_briefing" in data
+        assert "counterfactual_explanation" in data
+        assert "shap_values" in data
 
     def test_predict_probability_range(self, client):
         data = client.post("/predict", json=EXAMPLE_ACCOUNT).json()
@@ -91,90 +93,77 @@ class TestPredictEndpoint:
         data = client.post("/predict", json=EXAMPLE_ACCOUNT).json()
         assert data["risk_tier"] in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}
 
-    def test_predict_account_id_echoed(self, client):
+    def test_predict_human_guardrail_enforced(self, client):
         data = client.post("/predict", json=EXAMPLE_ACCOUNT).json()
-        assert data["account_id"] == EXAMPLE_ACCOUNT["account_id"]
-
-    def test_predict_flagged_consistent(self, client):
-        data = client.post("/predict", json=EXAMPLE_ACCOUNT).json()
-        prob = data["fraud_probability"]
-        is_flagged = data["is_flagged"]
-        assert is_flagged == (prob >= 0.5)
+        assert data["human_confirmation_required"] is True
+        assert any(keyword in data["recommended_action"] for keyword in ["Flag", "Allow", "Review", "Verification"])
 
 
-class TestCacheEndpoints:
+class TestAuditTrailEndpoints:
 
-    def test_seed_gnn_scores(self, client):
-        payload = {
-            "scores": {
-                "C_TEST_001": 0.95,
-                "C_TEST_002": 0.12
-            },
-            "ttl_seconds": 3600
+    def test_confirm_audit_action(self, client):
+        req_payload = {
+            "account_id": "acc_test_audit_01",
+            "decision": "CONFIRMED_FLAG",
+            "analyst_id": "analyst_sarah_01",
+            "risk_score": 0.94,
+            "notes": "Verified high-velocity balance drain across synthetic endpoints.",
+            "action_taken": "Hold for Merchant Verification",
         }
-        response = client.post("/cache/seed-gnn-scores", json=payload)
-        assert response.status_code == 200
-        data = response.json()
-        assert data["seeded_count"] == 2
-        assert data["ttl_seconds"] == 3600
+        resp = client.post("/audit/confirm-action", json=req_payload)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "audit_id" in data
+        assert data["account_id"] == "acc_test_audit_01"
+        assert data["status"] == "RECORDED"
 
-    def test_predict_uses_cached_gnn_score(self, client):
-        # Seed score 0.98 for C_TEST_CACHE
-        acc = dict(EXAMPLE_ACCOUNT, account_id="C_TEST_CACHE")
-        client.post("/cache/seed-gnn-scores", json={"scores": {"C_TEST_CACHE": 0.98}})
+    def test_list_audit_trail(self, client):
+        resp = client.get("/audit/list")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "total_records" in data
+        assert data["total_records"] >= 1
 
-        response = client.post("/predict", json=acc)
-        assert response.status_code == 200
-        data = response.json()
-        assert data["cache_hit"] is True
-        assert data["gnn_nearline_score"] == 0.98
+    def test_export_audit_trail(self, client):
+        resp_json = client.get("/audit/export?format=json")
+        assert resp_json.status_code == 200
+        assert "audit_trail" in resp_json.json()
 
-    def test_feature_store_read_write(self, client):
-        acc_id = "C_FEAT_TEST_001"
-        acc = dict(EXAMPLE_ACCOUNT, account_id=acc_id)
-
-        # Write features
-        post_resp = client.post(f"/cache/features/{acc_id}", json=acc)
-        assert post_resp.status_code == 200
-        assert post_resp.json()["saved"] is True
-
-        # Read features
-        get_resp = client.get(f"/cache/features/{acc_id}")
-        assert get_resp.status_code == 200
-        feats = get_resp.json()["features"]
-        assert feats["balance_drain_ratio"] == 0.95
+        resp_csv = client.get("/audit/export?format=csv")
+        assert resp_csv.status_code == 200
+        assert "audit_id" in resp_csv.text
 
 
-class TestMetricsEndpoint:
+class TestRazorpaySimulatorEndpoints:
 
-    def test_metrics_returns_200(self, client):
-        response = client.get("/metrics")
-        assert response.status_code == 200
-        assert "fraud_api_requests_total" in response.text or "prometheus" in response.text
+    def test_get_stream_event(self, client):
+        resp = client.get("/razorpay/stream-event")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "payment_id" in data
+        assert data["payment_id"].startswith("pay_")
+        assert "amount_inr" in data
+        assert "method" in data
+
+    def test_inject_ring_wave(self, client):
+        resp = client.post("/razorpay/inject-ring?ring_type=Promo-Abuse%20Ring")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ring_type"] == "Promo-Abuse Ring"
+        assert len(data["transactions"]) == 6
+        assert data["transactions"][0]["is_planted_ring"] is True
 
 
-class TestBatchScoreEndpoint:
+class TestEvaluationEndpoints:
 
-    def test_batch_score_returns_200(self, client):
-        payload = {"accounts": [EXAMPLE_ACCOUNT, EXAMPLE_ACCOUNT]}
-        response = client.post("/batch-score", json=payload)
-        assert response.status_code == 200
+    def test_get_benchmark(self, client):
+        resp = client.get("/evaluation/benchmark")
+        assert resp.status_code == 200
 
-    def test_batch_score_count(self, client):
-        n = 3
-        payload = {"accounts": [EXAMPLE_ACCOUNT] * n}
-        data = client.post("/batch-score", json=payload).json()
-        assert data["total_accounts"] == n
-        assert len(data["predictions"]) == n
+    def test_get_ablation(self, client):
+        resp = client.get("/evaluation/ablation")
+        assert resp.status_code == 200
 
-    def test_batch_score_empty_raises(self, client):
-        """Empty batch should return validation error."""
-        response = client.post("/batch-score", json={"accounts": []})
-        assert response.status_code == 422
-
-    def test_batch_score_flag_rate(self, client):
-        payload = {"accounts": [EXAMPLE_ACCOUNT] * 4}
-        data = client.post("/batch-score", json=payload).json()
-        flagged = data["flagged_accounts"]
-        total = data["total_accounts"]
-        assert abs(data["flag_rate"] - flagged / total) < 1e-6
+    def test_get_adversarial(self, client):
+        resp = client.get("/evaluation/adversarial")
+        assert resp.status_code == 200

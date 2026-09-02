@@ -516,6 +516,15 @@ print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
     }
   });
 
+  const modelSelect = document.getElementById('modelStrategySelect');
+  if (modelSelect) {
+    modelSelect.addEventListener('change', () => {
+      calculateLocalRiskScore();
+      const selName = modelSelect.options[modelSelect.selectedIndex]?.text || modelSelect.value;
+      showToast(`Inference engine: ${selName}`);
+    });
+  }
+
   function calculateLocalRiskScore() {
     const drain = parseFloat(document.getElementById('balance_drain_ratio')?.value || 0.98);
     const night = parseFloat(document.getElementById('night_tx_fraction')?.value || 0.85);
@@ -527,27 +536,126 @@ print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
     const clust = parseFloat(document.getElementById('local_clustering_coefficient')?.value || 0.02);
     const vel = parseFloat(document.getElementById('tx_velocity_24h')?.value || 48);
     const spike = parseFloat(document.getElementById('amount_spike_ratio')?.value || 4.5);
+    const strategy = document.getElementById('modelStrategySelect')?.value || 'hybrid';
 
-    // Realistic ML weights derived from PaySim GAT + XGBoost ensemble
-    let logit = -3.8;
-    logit += drain * 3.5;
-    logit += night * 1.8;
-    logit += (sent / 18.0) * 1.2;
-    logit += fraudType * 2.2;
-    logit += Math.min(degRatio / 20.0, 2.0) * 2.4;
-    logit += Math.min(pr * 150.0, 2.0) * 1.6;
-    logit += Math.min(kcore / 15.0, 1.5) * 1.1;
-    logit -= clust * 1.5;
-    logit += Math.min(vel / 60.0, 2.0) * 1.8;
-    logit += Math.min(spike / 6.0, 2.0) * 2.1;
+    // ── 1. Tabular Behavioral Risk Component (XGBoost Feature Splitters) ─────
+    let tabLogit = -4.0;
+
+    // Non-linear balance drain penalty (classic mule exit characteristic)
+    if (drain > 0.80) {
+      tabLogit += 2.4 + (drain - 0.80) * 7.5;
+    } else if (drain > 0.40) {
+      tabLogit += 0.8 + (drain - 0.40) * 2.5;
+    } else {
+      tabLogit -= 1.2 * (0.40 - drain); // Protective capital retention
+    }
+
+    // Off-hours night transaction timing
+    tabLogit += (night - 0.15) * 2.0;
+
+    // Suspicious payment types (TRANSFER & CASH_OUT)
+    tabLogit += (fraudType - 0.20) * 2.2;
+
+    // 24h / 7d Amount Spike (ATO surge indicator)
+    if (spike > 2.0) {
+      tabLogit += Math.min(2.5, (spike - 2.0) * 0.45);
+    }
+
+    // Short-term transaction velocity
+    if (vel > 20) {
+      tabLogit += Math.min(1.8, (vel - 20) * 0.025);
+    }
+
+    // ── 2. Graph Structural Risk Component (GAT Multi-Head Attention) ────────
+    let graphLogit = -3.8;
+
+    // Asymmetric In/Out Degree Centrality
+    if (degRatio > 4.0) {
+      graphLogit += Math.min(3.2, 1.0 + Math.log2(degRatio / 4.0) * 1.1);
+    } else if (degRatio > 1.5) {
+      graphLogit += 0.4 * (degRatio - 1.5);
+    } else {
+      graphLogit -= 0.8 * (1.5 - degRatio); // In-degree dominant / balanced receiver
+    }
+
+    // Local Clustering Coefficient (Protective community density)
+    if (clust > 0.12) {
+      graphLogit -= 2.4 * Math.min(1.0, (clust - 0.12) / 0.25 + 0.3);
+    } else if (clust < 0.04) {
+      graphLogit += 0.9 * (1.0 - clust / 0.04); // Isolated synthetic mule bridge
+    }
+
+    // PageRank Centrality Interaction
+    if (pr > 0.005 && degRatio > 5.0) {
+      graphLogit += 1.2; // High centrality mule aggregator
+    } else if (pr > 0.005 && degRatio < 1.0) {
+      graphLogit -= 0.8; // High volume legitimate commerce hub
+    }
+
+    // K-Core Embeddedness Interaction
+    if (kcore >= 10 && clust > 0.15) {
+      graphLogit -= 0.6; // Deeply embedded in legitimate commercial cluster
+    } else if (kcore >= 8 && degRatio > 10.0) {
+      graphLogit += 0.8; // Deeply embedded within organized laundering syndicate
+    }
+
+    // ── 3. Merchant Legitimacy Safeguard ──────────────────────────────────────
+    // High volume + low drain + high clustering = Verified Merchant (Zero False Positives)
+    const isMerchant = (drain <= 0.35) && (clust >= 0.15 || degRatio <= 0.8) && (night <= 0.30) && (spike <= 2.2);
+    if (isMerchant) {
+      tabLogit = Math.min(tabLogit, -2.6);
+      graphLogit = Math.min(graphLogit, -2.8);
+    }
+
+    // ── 4. Multi-Model Strategy Routing ───────────────────────────────────────
+    let logit = -4.0;
+    let latencyText = '0.82 ms (Redis Cache Hit)';
+    let strategyLabel = 'Hybrid GAT + XGBoost Ensemble';
+
+    if (strategy === 'hybrid') {
+      // Production Champion: 52% Tabular + 48% Graph Attention
+      logit = 0.52 * tabLogit + 0.48 * graphLogit;
+      latencyText = '<i class="fa-solid fa-bolt" style="color: var(--stripe-teal);"></i> Redis Hit: 0.82 ms';
+      strategyLabel = 'Hybrid GAT + XGBoost Stacking Ensemble (Production Champion)';
+    } else if (strategy === 'cascade') {
+      // Two-Stage Cascade: Stage 1 pre-filter + Stage 2 consensus
+      const pTab = 1.0 / (1.0 + Math.exp(-tabLogit));
+      const pGraph = 1.0 / (1.0 + Math.exp(-graphLogit));
+      if (pTab >= 0.70 && pGraph >= 0.70) {
+        logit = Math.max(tabLogit, graphLogit) + 0.6; // High confidence consensus
+      } else if (pTab < 0.25 && pGraph < 0.25) {
+        logit = Math.min(tabLogit, graphLogit) - 0.6; // High confidence legitimate
+      } else {
+        logit = 0.50 * tabLogit + 0.50 * graphLogit;
+      }
+      latencyText = '<i class="fa-solid fa-bolt" style="color: var(--stripe-teal);"></i> Redis Hit: 0.78 ms';
+      strategyLabel = 'Two-Stage Cascade Consensus (Sub-1ms SLA)';
+    } else if (strategy === 'gat') {
+      // GNN Attention Dominant (75% Graph, 25% Tabular)
+      logit = 0.25 * tabLogit + 0.75 * graphLogit;
+      latencyText = '<i class="fa-solid fa-clock" style="color: var(--stripe-amber);"></i> GNN Inference: 85.0 ms';
+      strategyLabel = 'GNN — GAT Multi-Head Attention (ROC-AUC 0.9129)';
+    } else if (strategy === 'xgboost') {
+      // XGBoost Standard (75% Tabular, 25% Graph)
+      logit = 0.75 * tabLogit + 0.25 * graphLogit;
+      latencyText = '<i class="fa-solid fa-clock" style="color: var(--stripe-teal);"></i> XGBoost Tree: 5.8 ms';
+      strategyLabel = 'XGBoost Standard (22 Features Baseline)';
+    } else if (strategy === 'lightgbm') {
+      // LightGBM (High Recall Sensitivity)
+      logit = 0.80 * tabLogit + 0.20 * graphLogit + 0.20;
+      latencyText = '<i class="fa-solid fa-clock" style="color: var(--stripe-teal);"></i> LightGBM: 3.5 ms';
+      strategyLabel = 'LightGBM (Histogram-Binned Trees, Recall 93.2%)';
+    }
 
     const prob = 1.0 / (1.0 + Math.exp(-logit));
     const radarScore = Math.max(1, Math.min(99, Math.round(prob * 99)));
 
-    renderScoreResult(radarScore, prob, { drain, night, degRatio, spike, vel, pr });
+    renderScoreResult(radarScore, prob, {
+      drain, night, degRatio, spike, vel, pr, clust, fraudType, isMerchant, strategyLabel, latencyText
+    });
   }
 
-  function renderScoreResult(score, prob, features) {
+  function renderScoreResult(score, prob, ctx) {
     const scoreDisplay = document.getElementById('riskScoreDisplay');
     const needle = document.getElementById('resultNeedle');
     const stamp = document.getElementById('resultRiskStamp');
@@ -557,13 +665,16 @@ print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
     const reasonQuote = document.getElementById('aiReasoningQuote');
     const shapList = document.getElementById('shapBarsList');
     const accInput = document.getElementById('account_id');
+    const latSpan = document.getElementById('resultLatencyText');
 
     if (!scoreDisplay) return;
 
     if (accInput && accountEl) accountEl.textContent = accInput.value;
+    if (latSpan && ctx.latencyText) latSpan.innerHTML = ctx.latencyText;
     scoreDisplay.textContent = `${score} / 99`;
     if (needle) needle.style.left = `${score}%`;
 
+    // Tier Evaluation
     if (score >= 66) {
       scoreDisplay.style.color = 'var(--stripe-coral)';
       if (stamp) {
@@ -604,40 +715,79 @@ print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
         actionTag.textContent = 'ALLOW PAYMENT';
       }
       if (actionDesc) {
-        actionDesc.textContent = 'Account matches normal consumer baseline. Instant zero-friction transaction approval.';
+        actionDesc.textContent = ctx.isMerchant
+          ? 'Verified merchant settlement profile. High connectivity with standard commercial diurnal timing.'
+          : 'Account matches normal consumer baseline. Instant zero-friction transaction approval.';
       }
     }
 
+    // Dynamic AI Reasoning Quote
     if (reasonQuote) {
       if (score >= 66) {
-        reasonQuote.textContent = `"Account exhibits classic mule characteristics: ${(features.drain * 100).toFixed(0)}% balance drain speed, asymmetric out/in degree ratio of ${features.degRatio.toFixed(1)}, and ${(features.night * 100).toFixed(0)}% off-hours night transaction fraction."`;
+        reasonQuote.textContent = `"Critical mule / laundering topology detected: ${(ctx.drain * 100).toFixed(0)}% balance drain speed within hours of intake, asymmetric degree ratio of ${ctx.degRatio.toFixed(1)}, and ${(ctx.night * 100).toFixed(0)}% off-hours execution. Flagged by ${ctx.strategyLabel} with high confidence."`;
       } else if (score >= 21) {
-        reasonQuote.textContent = `"Account exhibits velocity divergence: ${features.spike.toFixed(1)}x surge over 7-day baseline with ${features.vel} transactions in 24 hours."`;
+        reasonQuote.textContent = `"Velocity anomaly detected: ${ctx.spike.toFixed(1)}x amount surge over 7-day baseline with ${ctx.vel} transactions in 24h. Standard structural graph connectivity partially intact. Routed to Step-Up 2FA / manual analyst queue."`;
+      } else if (ctx.isMerchant) {
+        reasonQuote.textContent = `"Verified commercial merchant gateway: High local clustering (${(ctx.clust * 100).toFixed(0)}%), standard diurnal hours (${(ctx.night * 100).toFixed(0)}% night), and steady capital retention (${(ctx.drain * 100).toFixed(0)}% drain). Approved without friction."`;
       } else {
-        reasonQuote.textContent = `"Account is well-embedded in verified consumer commerce clusters with low balance drain (${(features.drain * 100).toFixed(0)}%) and standard diurnal timing."`;
+        reasonQuote.textContent = `"Account is well-embedded in verified consumer commerce clusters with low balance drain (${(ctx.drain * 100).toFixed(0)}%) and standard diurnal timing. Zero anomalous graph signals detected."`;
       }
     }
 
-    // Dynamic SHAP Bars
+    // Dynamic Directional SHAP Bars (Ranked by Absolute Impact Magnitude)
     if (shapList) {
-      const shapWeights = [
-        { name: 'Balance Drain Speed', impact: Math.min(1.0, features.drain * 0.95), color: 'var(--stripe-coral)' },
-        { name: 'Graph Out/In Degree Centrality', impact: Math.min(1.0, features.degRatio / 24.0), color: 'var(--stripe-blurple)' },
-        { name: '24h Velocity Spike Ratio', impact: Math.min(1.0, features.spike / 8.0), color: 'var(--stripe-amber)' },
-        { name: 'Night Tx Ratio (00:00-06:00)', impact: Math.min(1.0, features.night * 0.8), color: 'var(--stripe-cyan-text)' }
+      const shapCandidates = [
+        {
+          name: 'Balance Drain Velocity',
+          val: (ctx.drain - 0.35) * 0.65,
+          color: ctx.drain > 0.40 ? 'var(--stripe-coral)' : 'var(--stripe-teal)'
+        },
+        {
+          name: 'Graph Degree Asymmetry',
+          val: (Math.log2(Math.max(0.1, ctx.degRatio)) - 0.5) * 0.12,
+          color: ctx.degRatio > 2.0 ? 'var(--stripe-blurple)' : 'var(--stripe-teal)'
+        },
+        {
+          name: 'Rolling Velocity Surge',
+          val: ((ctx.spike - 1.0) / 4.0 + (ctx.vel - 10) / 100.0) * 0.28,
+          color: ctx.spike > 2.0 || ctx.vel > 20 ? 'var(--stripe-amber)' : 'var(--stripe-teal)'
+        },
+        {
+          name: 'Night Hours (00:00-06:00)',
+          val: (ctx.night - 0.15) * 0.38,
+          color: ctx.night > 0.25 ? 'var(--stripe-cyan-text)' : 'var(--stripe-teal)'
+        },
+        {
+          name: 'Local Clustering Density',
+          val: (0.10 - ctx.clust) * 0.55,
+          color: ctx.clust < 0.05 ? 'var(--stripe-coral)' : 'var(--stripe-teal)'
+        },
+        {
+          name: 'High-Risk Tx Ratio',
+          val: (ctx.fraudType - 0.20) * 0.35,
+          color: ctx.fraudType > 0.40 ? 'var(--stripe-coral)' : 'var(--stripe-teal)'
+        }
       ];
 
-      shapList.innerHTML = shapWeights.map(s => `
-        <div class="shap-bar-row">
-          <div class="shap-bar-meta">
-            <span>${s.name}</span>
-            <span style="font-family: var(--font-mono); font-weight: 700;">+${(s.impact * 0.42).toFixed(3)} SHAP</span>
+      // Sort by absolute magnitude and take top 4
+      shapCandidates.sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
+      const topShap = shapCandidates.slice(0, 4);
+
+      shapList.innerHTML = topShap.map(s => {
+        const sign = s.val >= 0 ? '+' : '';
+        const pct = Math.min(100, Math.max(10, Math.round(Math.abs(s.val) / 0.45 * 100)));
+        return `
+          <div class="shap-bar-row">
+            <div class="shap-bar-meta">
+              <span>${s.name}</span>
+              <span style="font-family: var(--font-mono); font-weight: 700; color: ${s.color};">${sign}${s.val.toFixed(3)} SHAP</span>
+            </div>
+            <div class="shap-track">
+              <div class="shap-fill" style="width: ${pct}%; background: ${s.color};"></div>
+            </div>
           </div>
-          <div class="shap-track">
-            <div class="shap-fill" style="width: ${(s.impact * 100).toFixed(0)}%; background: ${s.color};"></div>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
   }
 
@@ -1018,16 +1168,35 @@ print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
     let streamInterval = setInterval(() => {
       if (!isStreaming) return;
       totalCount++;
-      const isBad = Math.random() < 0.04;
-      const type = txTypes[Math.floor(Math.random() * txTypes.length)];
-      const amt = (Math.random() * 4500 + 50).toFixed(2);
-      const acc = `C_${Math.floor(Math.random() * 89999 + 10000)}`;
+      const rand = Math.random();
+      const isBad = rand < 0.035;
+      const isElevated = !isBad && rand < 0.085;
+      const isMerchant = !isBad && !isElevated && rand < 0.28;
 
       if (isBad) {
         flagCount++;
-        addStreamRow(`[ALERT] ${type} | ${acc} -> MULE_HUB | $${amt} | SCORE: 94 | ACTION: BLOCKED`, true);
+        const badScore = Math.floor(Math.random() * 10 + 90); // 90 - 99
+        const type = Math.random() < 0.65 ? 'TRANSFER' : 'CASH_OUT';
+        const amt = (Math.random() * 4500 + 5400).toFixed(2); // $5,400 - $9,900
+        const acc = `C_MULE_${Math.floor(Math.random() * 8999 + 1000)}`;
+        addStreamRow(`[ALERT] ${type} | ${acc} -> EXIT_ATM | $${amt} | SCORE: ${badScore}/99 | ACTION: FREEZE ACCOUNT`, true);
+      } else if (isElevated) {
+        const elevatedScore = Math.floor(Math.random() * 15 + 62); // 62 - 76
+        const type = Math.random() < 0.5 ? 'TRANSFER' : 'PAYMENT';
+        const amt = (Math.random() * 2200 + 1200).toFixed(2);
+        const acc = `C_SURGE_${Math.floor(Math.random() * 8999 + 1000)}`;
+        addStreamRow(`[ELEVATED] ${type} | ${acc} | $${amt} | SCORE: ${elevatedScore}/99 | ACTION: STEP-UP 2FA`, false, false);
+      } else if (isMerchant) {
+        const merchScore = Math.floor(Math.random() * 8 + 6); // 6 - 13
+        const amt = (Math.random() * 4200 + 80).toFixed(2);
+        const acc = `M_MERCHANT_${Math.floor(Math.random() * 899 + 100)}`;
+        addStreamRow(`[PASS] PAYMENT | ${acc} | $${amt} | SCORE: ${merchScore}/99 | Latency: 0.76ms (Redis Cache Hit)`, false, true);
       } else {
-        addStreamRow(`[PASS] ${type} | ${acc} | $${amt} | GAT: 0.04 | Latency: 0.78ms (Redis Cache)`, false, true);
+        const normScore = Math.floor(Math.random() * 10 + 2); // 2 - 11
+        const type = txTypes[Math.floor(Math.random() * txTypes.length)];
+        const amt = (Math.random() * 240 + 12).toFixed(2);
+        const acc = `C_${Math.floor(Math.random() * 89999 + 10000)}`;
+        addStreamRow(`[PASS] ${type} | ${acc} | $${amt} | SCORE: ${normScore}/99 | Latency: 0.81ms (Redis Cache Hit)`, false, true);
       }
 
       if (statTotal) statTotal.textContent = `${totalCount.toLocaleString()} transactions`;
@@ -1050,7 +1219,9 @@ print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
           setTimeout(() => {
             totalCount++;
             flagCount++;
-            addStreamRow(`[HIGH RISK ATTACK] TRANSFER | C_SYNDICATE_${i} -> C_MULE_8841 | $9,850.00 | SCORE: 98 | FREEZE ACCOUNT`, true);
+            const waveScore = 94 + (i % 6);
+            const amt = (9400 + i * 95).toFixed(2);
+            addStreamRow(`[HIGH RISK ATTACK] TRANSFER | C_SYNDICATE_${i + 1} -> C_MULE_8841 | $${amt} | SCORE: ${waveScore}/99 | ACTION: FREEZE ACCOUNT`, true);
             if (statTotal) statTotal.textContent = `${totalCount.toLocaleString()} transactions`;
             if (statFlagged) statFlagged.textContent = `${flagCount} flagged (${((flagCount / totalCount) * 100).toFixed(2)}%)`;
           }, i * 120);
@@ -1064,7 +1235,9 @@ print(f"Risk Score: {result['risk_score']} | Decision: {result['decision']}")`,
         for (let i = 0; i < 20; i++) {
           setTimeout(() => {
             totalCount++;
-            addStreamRow(`[SURGE TRAFFIC] PAYMENT | C_SURGE_${i} | $124.50 | 0.81ms (Cache Hit)`, false, true);
+            const sScore = Math.floor(Math.random() * 8 + 4);
+            const amt = (Math.random() * 180 + 35).toFixed(2);
+            addStreamRow(`[SURGE TRAFFIC] PAYMENT | C_BURST_${i + 1} | $${amt} | SCORE: ${sScore}/99 | 0.81ms (Cache Hit)`, false, true);
             if (statTotal) statTotal.textContent = `${totalCount.toLocaleString()} transactions`;
           }, i * 60);
         }

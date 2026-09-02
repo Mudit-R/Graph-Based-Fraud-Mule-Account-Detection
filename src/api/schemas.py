@@ -2,12 +2,13 @@
 src/api/schemas.py
 ──────────────────────────────────────────────────────────────────────────────
 Pydantic v2 request/response models for the fraud detection API.
+Includes merchant fraud risk representations, SHAP attributions, LLM briefings,
+counterfactuals, and human-in-the-loop audit logs.
 """
 from __future__ import annotations
 
-from typing import Dict, List, Optional
-
-from pydantic import BaseModel, Field, field_validator
+from typing import Dict, List, Optional, Any
+from pydantic import BaseModel, Field, ConfigDict
 
 
 # ── Request Models ────────────────────────────────────────────────────────────
@@ -15,11 +16,39 @@ from pydantic import BaseModel, Field, field_validator
 class AccountFeatures(BaseModel):
     """
     Features for a single account, used in real-time scoring.
-
-    In production, these would be pulled from a feature store
-    (e.g., Redis or Feast) keyed by account_id.
+    In production, these are served via Redis nearline feature store.
     """
-    account_id: str = Field(..., description="Account identifier (e.g. 'C123456789')")
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "account_id": "acc_promo_ring_8841",
+                "total_sent_log": 12.5,
+                "total_received_log": 10.2,
+                "tx_count_out": 45.0,
+                "tx_count_in": 3.0,
+                "unique_dest_count": 40.0,
+                "unique_src_count": 3.0,
+                "avg_sent_log": 8.3,
+                "avg_received_log": 9.1,
+                "balance_drain_ratio": 0.95,
+                "night_tx_fraction": 0.80,
+                "fraud_type_fraction": 1.0,
+                "in_degree": 3.0,
+                "out_degree": 45.0,
+                "degree_ratio": 15.0,
+                "pagerank": 0.0023,
+                "k_core_number": 5.0,
+                "local_clustering_coefficient": 0.02,
+                "tx_velocity_24h": 12.0,
+                "tx_velocity_7d": 45.0,
+                "amount_velocity_24h": 10.5,
+                "amount_velocity_7d": 12.5,
+                "amount_spike_ratio": 2.3,
+            }
+        }
+    )
+
+    account_id: str = Field(..., description="Account identifier (e.g. 'acc_rzp_9941')")
 
     # Tabular aggregates (pre-computed in the feature store)
     total_sent_log: float = Field(0.0, ge=0.0)
@@ -49,35 +78,6 @@ class AccountFeatures(BaseModel):
     amount_velocity_7d: float = Field(0.0, ge=0.0)
     amount_spike_ratio: float = Field(0.0, ge=0.0)
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "account_id": "C1234567890",
-                "total_sent_log": 12.5,
-                "total_received_log": 10.2,
-                "tx_count_out": 45,
-                "tx_count_in": 3,
-                "unique_dest_count": 40,
-                "unique_src_count": 3,
-                "avg_sent_log": 8.3,
-                "avg_received_log": 9.1,
-                "balance_drain_ratio": 0.95,
-                "night_tx_fraction": 0.8,
-                "fraud_type_fraction": 1.0,
-                "in_degree": 3.0,
-                "out_degree": 45.0,
-                "degree_ratio": 15.0,
-                "pagerank": 0.0023,
-                "k_core_number": 5.0,
-                "local_clustering_coefficient": 0.02,
-                "tx_velocity_24h": 12.0,
-                "tx_velocity_7d": 45.0,
-                "amount_velocity_24h": 10.5,
-                "amount_velocity_7d": 12.5,
-                "amount_spike_ratio": 2.3,
-            }
-        }
-
 
 class BatchScoreRequest(BaseModel):
     """Batch scoring request — list of AccountFeatures."""
@@ -87,7 +87,7 @@ class BatchScoreRequest(BaseModel):
 # ── Response Models ───────────────────────────────────────────────────────────
 
 class FraudPrediction(BaseModel):
-    """Single account fraud prediction result."""
+    """Single account fraud prediction result with human-in-the-loop guardrails."""
     account_id: str
     fraud_probability: float = Field(..., ge=0.0, le=1.0)
     is_flagged: bool
@@ -97,6 +97,18 @@ class FraudPrediction(BaseModel):
     cache_hit: bool = Field(False, description="True if GNN score was retrieved from nearline Redis cache")
     gnn_nearline_score: Optional[float] = Field(None, description="Pre-computed nearline GNN risk score if available")
     scoring_latency_ms: float = Field(0.0, description="Exact inference & scoring latency in milliseconds")
+    
+    # Tier 1 & Tier 2 Grounding & Explainability
+    recommended_action: str = Field("Standard Clearance", description="Advisory recommendation for human analyst")
+    human_confirmation_required: bool = Field(True, description="Strict non-negotiable: human analyst confirmation required")
+    llm_investigator_briefing: Optional[str] = Field(None, description="Plain-English tactical briefing synthesized for analysts")
+    counterfactual_explanation: Optional[Dict[str, Any]] = Field(None, description="Minimal feature adjustments to achieve safe tier")
+    shap_values: Optional[Dict[str, float]] = Field(None, description="Exact SHAP local impact feature values")
+    cost_optimal_threshold: float = Field(0.42, description="Operational cost-optimal threshold T* under cascade & capacity constraints")
+    theoretical_bayes_threshold: float = Field(0.0083, description="Theoretical unweighted single-tx Bayes threshold C_FP/(C_FP+C_FN)")
+    expected_cost_inr: Optional[float] = Field(None, description="Estimated total financial impact at current threshold")
+    ring_topology_type: Optional[str] = Field(None, description="Detected merchant fraud ring typology")
+    sub_risk_breakdown: Optional[Dict[str, float]] = Field(None, description="Multi-task risk breakdown: promo, return, chargeback, ato")
 
 
 class BatchScoreResponse(BaseModel):
@@ -133,3 +145,22 @@ class CacheSeedResponse(BaseModel):
     redis_connected: bool
     ttl_seconds: int
 
+
+class AuditActionRequest(BaseModel):
+    """Request to record a human analyst review confirmation in the audit trail."""
+    account_id: str
+    decision: str  # "CONFIRMED_FLAG" | "OVERRIDDEN_CLEAN" | "REQUEST_ADDITIONAL_INFO"
+    analyst_id: str = "analyst_ops_01"
+    risk_score: float
+    notes: Optional[str] = None
+    action_taken: str = "Flagged for Physical Delivery Verification"
+
+
+class AuditActionResponse(BaseModel):
+    """Response confirming human decision recorded in durable audit trail."""
+    audit_id: str
+    account_id: str
+    decision: str
+    analyst_id: str
+    timestamp: str
+    status: str = "RECORDED"

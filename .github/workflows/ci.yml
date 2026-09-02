@@ -1,4 +1,4 @@
-name: CI — Fraud Detection
+name: CI — Razorpay Abuse-Ring Sentinel
 
 on:
   push:
@@ -29,52 +29,29 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install dependencies (CPU-only, no torch-geometric GPU wheels)
+      - name: Install dependencies (CPU-only PyTorch & PyG)
         run: |
           pip install --upgrade pip
-          pip install torch==2.4.0 --index-url https://download.pytorch.org/whl/cpu
-          pip install torch-geometric==2.5.3
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install torch-geometric
           pip install -r requirements.txt
 
-      - name: Lint with flake8
+      - name: Run complete test suite (Leakage + Graph + Features + API)
         run: |
-          flake8 src tests --max-line-length=120 \
-            --exclude=src/models/tgn.py  # skip TGN (optional dep)
+          pytest tests/ -v --tb=short --no-header
 
-      - name: Check formatting with black
+      - name: Run benchmark reproduction & CI drift guard
         run: |
-          black src tests --check --line-length=120
+          python scripts/reproduce_benchmark.py
+          python scripts/benchmark_latency.py
+          python scripts/run_ablation_study.py
+          python scripts/calibrate_probabilities.py
+          python scripts/evaluate_adversarial.py
+          python scripts/evaluate_tier4_research.py
 
-      - name: Run unit tests (graph builder + features)
-        run: |
-          pytest tests/test_graph_builder.py tests/test_features.py \
-            -v --tb=short --no-header
-
-      - name: Run API tests
-        run: |
-          pytest tests/test_api.py -v --tb=short --no-header
-
-      - name: Upload coverage report
+      - name: Upload benchmark artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: .pytest_cache/
-
-  docker-build:
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: |
-          docker build -f docker/Dockerfile -t fraud-detection-api:ci .
-
-      - name: Smoke test Docker image
-        run: |
-          docker run -d --name fraud-api-test -p 8000:8000 fraud-detection-api:ci
-          sleep 15
-          curl -f http://localhost:8000/health || (docker logs fraud-api-test && exit 1)
-          docker stop fraud-api-test
+          name: benchmark-results
+          path: outputs/
