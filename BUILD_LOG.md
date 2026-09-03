@@ -7,7 +7,7 @@
 
 ---
 
-## 🛠️ Build Log & Failure Recovery Records ("What Broke, and How We Got Out")
+## ️ Build Log & Failure Recovery Records ("What Broke, and How We Got Out")
 
 Here is the transparent, chronological record of real engineering roadblocks encountered during development and how each was resolved with sound engineering judgment.
 
@@ -31,8 +31,8 @@ Here is the transparent, chronological record of real engineering roadblocks enc
 * **What Happened:** In naive graph construction, computing PageRank and local clustering coefficients over the entire transaction graph allowed edges from the test period (e.g. $step > 600$) to influence the feature values of training nodes.
 * **Root Cause:** Global graph structural algorithms do not inherently respect time cutoffs unless the graph is strictly partitioned before graph construction.
 * **How We Got Out:** 
-  1. Built strict temporal graph slicing where the training graph DiGraph is constructed exclusively from transactions with $step \le T_{\text{train}}$.
-  2. Implemented an automated regression test in `tests/test_leakage.py` that verifies the set intersection between exclusive test edges and training graph edges is strictly empty ($|\mathcal{E}_{\text{test}} \cap \mathcal{E}_{\text{train}}| = 0$).
+ 1. Built strict temporal graph slicing where the training graph DiGraph is constructed exclusively from transactions with $step \le T_{\text{train}}$.
+ 2. Implemented an automated regression test in `tests/test_leakage.py` that verifies the set intersection between exclusive test edges and training graph edges is strictly empty ($|\mathcal{E}_{\text{test}} \cap \mathcal{E}_{\text{train}}| = 0$).
 
 ---
 
@@ -40,9 +40,9 @@ Here is the transparent, chronological record of real engineering roadblocks enc
 * **What Happened:** Initial evaluation of models under default classification threshold ($T = 0.50$) showed near-zero F1 scores ($0.036 - 0.048$) despite strong ROC-AUC ($0.9129$).
 * **Root Cause:** At 0.13% base fraud rate (1 fraud per 770 clean transactions), standard cross-entropy and fixed 0.50 cutoffs are mathematically overwhelmed by true negatives.
 * **How We Got Out:** 
-  1. Disclosed the metric limitation openly rather than hiding it.
-  2. Shifted the operational evaluation metric to **Precision@K (Precision@100 = 92.0%)**, matching the real-world operational capacity of merchant fraud review teams.
-  3. Formulated the **FinOps Cost Model** to derive the cost-optimal decision threshold ($T^* = 0.42$), saving **₹48,200+ per 10k transactions**.
+ 1. Disclosed the metric limitation openly rather than hiding it.
+ 2. Shifted the operational evaluation metric to **Precision@K (Precision@100 = 92.0%)**, matching the real-world operational capacity of merchant fraud review teams.
+ 3. Formulated the **FinOps Cost Model** to derive the cost-optimal decision threshold ($T^* = 0.42$), saving **₹48,200+ per 10k transactions**.
 
 ---
 
@@ -67,7 +67,7 @@ Here is the transparent, chronological record of real engineering roadblocks enc
 
 ---
 
-## 📋 Comprehensive Verification Summary
+##  Comprehensive Verification Summary
 
 | Verification Target | Command | Result | Status |
 |---|---|---|---|

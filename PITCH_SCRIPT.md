@@ -1,4 +1,4 @@
-# 🎬 PITCH_SCRIPT.md — AI Risk Manager (Track 02: Abuse-Ring Sentinel)
+#  PITCH_SCRIPT.md — AI Risk Manager (Track 02: Abuse-Ring Sentinel)
 
 > **Project Name:** Sentinel — Real-Time Abuse-Ring & FinOps Risk Engine  
 > **Applicant:** Mudit  
@@ -8,7 +8,7 @@
 
 ---
 
-## ⏱️ Video Breakdown & Timestamped Script
+## ️ Video Breakdown & Timestamped Script
 
 ---
 
@@ -84,7 +84,7 @@
 
 ---
 
-## 🎯 Recording Checklist Before Video Capture
+##  Recording Checklist Before Video Capture
 - [ ] Run FastAPI backend: `uvicorn src.api.main:app --host 0.0.0.0 --port 8000`
 - [ ] Open `http://localhost:8000/console.html` in full screen Chrome browser.
 - [ ] Keep terminal open side-by-side to show `python scripts/reproduce_benchmark.py` and `pytest tests/`.
