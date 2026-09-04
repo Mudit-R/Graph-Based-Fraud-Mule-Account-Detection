@@ -1,4 +1,15 @@
-{
+﻿{
+  "version": 2,
   "cleanUrls": true,
-  "framework": null
+  "trailingSlash": false,
+  "routes": [
+    {
+      "src": "/console",
+      "dest": "/console.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
 }
