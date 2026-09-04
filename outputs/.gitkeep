@@ -1,0 +1,2 @@
+# outputs directory — gitignored except this file
+# Model checkpoints, evaluation results, and feature matrices are saved here.
