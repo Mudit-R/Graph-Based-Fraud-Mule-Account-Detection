@@ -31,3 +31,5 @@ Thumbs.db
 
 # local config overrides
 local_config.py
+mlflow.db
+venv_new/
