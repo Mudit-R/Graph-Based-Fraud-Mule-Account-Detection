@@ -1,17 +1,18 @@
+FROM python:3.11-slim-bookworm AS case-api
+WORKDIR /build
+COPY requirements-case-review.txt /build/requirements-case-review.txt
+RUN python -m venv /opt/case-api \
+    && /opt/case-api/bin/pip install --no-cache-dir --upgrade pip \
+    && /opt/case-api/bin/pip install --no-cache-dir -r requirements-case-review.txt
+
 FROM neo4j:5.26.34-community
 
 USER root
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 python3-venv \
-    && rm -rf /var/lib/apt/lists/* \
-    && python3 -m venv /opt/case-api \
-    && /opt/case-api/bin/pip install --no-cache-dir --upgrade pip \
-    && mkdir -p /app/case-data \
-    && chown -R neo4j:neo4j /app
+COPY --from=case-api /usr/local/ /usr/local/
+COPY --from=case-api /opt/case-api/ /opt/case-api/
+RUN mkdir -p /app/case-data && chown -R neo4j:neo4j /app
 
 WORKDIR /app
-COPY requirements-case-review.txt /app/requirements-case-review.txt
-RUN /opt/case-api/bin/pip install --no-cache-dir -r requirements-case-review.txt
 COPY src/__init__.py /app/src/__init__.py
 COPY src/api/__init__.py src/api/case_review.py src/api/case_store.py src/api/case_neo4j.py /app/src/api/
 COPY src/graph/__init__.py src/graph/ring_detector.py /app/src/graph/
