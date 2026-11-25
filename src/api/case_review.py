@@ -188,7 +188,7 @@ def create_app(
             for token_digest, configured_analyst in analysts_by_token.items():
                 if compare_digest(token_digest, presented):
                     analyst = configured_analyst
-        if analyst is None and public_demo and credentials is not None:
+        if analyst is None and public_demo:
             analyst = Analyst("public-demo", "viewer")
         if analyst is None:
             raise HTTPException(status_code=401, detail="An analyst token is required.",
