@@ -8,9 +8,13 @@ export FRAUD_CASE_PUBLIC_DEMO=true
 export FRAUD_CASE_BOOTSTRAP_DEMO=true
 export FRAUD_CASE_DATABASE=/app/case-data/review.sqlite3
 
+"/opt/case-api/bin/python" -m uvicorn src.api.case_review:create_app_from_env \
+  --factory --host 0.0.0.0 --port "${PORT:-8080}" &
+api_pid=$!
+sleep 1
+
 /startup/docker-entrypoint.sh neo4j console &
 neo4j_pid=$!
-api_pid=""
 stop_children() {
   [[ -z "$api_pid" ]] || kill "$api_pid" 2>/dev/null || true
   kill "$neo4j_pid" 2>/dev/null || true
@@ -29,9 +33,6 @@ for attempt in $(seq 1 90); do
 done
 [[ "$ready" == 1 ]] || { echo "Neo4j readiness timed out." >&2; exit 1; }
 
-"/opt/case-api/bin/python" -m uvicorn src.api.case_review:create_app_from_env \
-  --factory --host 0.0.0.0 --port "${PORT:-8080}" &
-api_pid=$!
 set +e
 wait -n "$neo4j_pid" "$api_pid"
 status=$?
