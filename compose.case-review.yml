@@ -1,0 +1,65 @@
+x-case-review-env: &case-review-env
+  FRAUD_CASE_ANALYST: "${FRAUD_CASE_ANALYST:-}"
+  FRAUD_CASE_TOKEN: "${FRAUD_CASE_TOKEN:-}"
+  FRAUD_CASE_CREDENTIALS_JSON: "${FRAUD_CASE_CREDENTIALS_JSON:-}"
+  FRAUD_CASE_DATABASE: /app/case-data/review.sqlite3
+
+x-case-review: &case-review
+  build:
+    context: .
+    dockerfile: Dockerfile.case-review
+  healthcheck:
+    test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8001/health', timeout=2).close()"]
+    interval: 15s
+    timeout: 3s
+    retries: 3
+
+services:
+  case-review:
+    <<: *case-review
+    environment: *case-review-env
+    ports:
+      - "127.0.0.1:8001:8001"
+    volumes:
+      - case-data:/app/case-data
+  case-review-neo4j:
+    <<: *case-review
+    profiles: ["graph"]
+    environment:
+      <<: *case-review-env
+      FRAUD_CASE_NEO4J_URI: bolt://neo4j:7687
+      FRAUD_CASE_NEO4J_USER: neo4j
+      FRAUD_CASE_NEO4J_PASSWORD: "${FRAUD_CASE_NEO4J_PASSWORD:-}"
+      FRAUD_CASE_NEO4J_DATABASE: neo4j
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8002:8001"
+    volumes:
+      - case-data-neo4j:/app/case-data
+  neo4j:
+    image: neo4j:5.26.34-community
+    profiles: ["graph"]
+    environment:
+      NEO4J_AUTH: "neo4j/${FRAUD_CASE_NEO4J_PASSWORD:-}"
+      NEO4J_server_http_enabled: "false"
+      NEO4J_dbms_usage__report_enabled: "false"
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 128m
+    ports:
+      - "127.0.0.1:${FRAUD_CASE_NEO4J_BOLT_PORT:-17687}:7687"
+    volumes:
+      - neo4j-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", 'cypher-shell -a bolt://localhost:7687 -u neo4j -p "$${NEO4J_AUTH#neo4j/}" "RETURN 1" >/dev/null 2>&1']
+      start_period: 30s
+      interval: 15s
+      timeout: 8s
+      retries: 3
+
+volumes:
+  case-data:
+  case-data-neo4j:
+  neo4j-data:

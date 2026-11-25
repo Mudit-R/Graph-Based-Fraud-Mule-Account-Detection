@@ -1,0 +1,111 @@
+{
+  "anchor": {
+    "type": "device_id",
+    "id": "demo-cross-shared-device"
+  },
+  "batches": [
+    {
+      "batch_id": "cross-case-demo-east",
+      "transactions": [
+        {
+          "transaction_id": "demo-payment-1",
+          "customer_id": "demo-cross-east-account-1",
+          "merchant_id": "demo-cross-east-merchant-1",
+          "amount": 3900,
+          "timestamp": 1795593600,
+          "device_id": "demo-cross-shared-device"
+        },
+        {
+          "transaction_id": "demo-payment-2",
+          "customer_id": "demo-cross-east-account-2",
+          "merchant_id": "demo-cross-east-merchant-2",
+          "amount": 4600,
+          "timestamp": 1795593700,
+          "device_id": "demo-cross-shared-device"
+        }
+      ],
+      "risk_scores": {
+        "demo-cross-east-account-1": 0.85,
+        "demo-cross-east-account-2": 0.77
+      }
+    },
+    {
+      "batch_id": "cross-case-demo-west",
+      "transactions": [
+        {
+          "transaction_id": "demo-payment-1",
+          "customer_id": "demo-cross-west-account-1",
+          "merchant_id": "demo-cross-west-merchant-1",
+          "amount": 3900,
+          "timestamp": 1795593600,
+          "device_id": "demo-cross-shared-device",
+          "bank_account_id": "demo-cross-beneficiary-bank"
+        },
+        {
+          "transaction_id": "demo-payment-2",
+          "customer_id": "demo-cross-west-account-2",
+          "merchant_id": "demo-cross-west-merchant-2",
+          "amount": 4600,
+          "timestamp": 1795593700,
+          "device_id": "demo-cross-shared-device"
+        }
+      ],
+      "risk_scores": {
+        "demo-cross-west-account-1": 0.85,
+        "demo-cross-west-account-2": 0.77
+      }
+    },
+    {
+      "batch_id": "cross-case-demo-south",
+      "transactions": [
+        {
+          "transaction_id": "demo-payment-1",
+          "customer_id": "demo-cross-south-account-1",
+          "merchant_id": "demo-cross-south-merchant-1",
+          "amount": 3900,
+          "timestamp": 1795593600,
+          "bank_account_id": "demo-cross-beneficiary-bank"
+        },
+        {
+          "transaction_id": "demo-payment-2",
+          "customer_id": "demo-cross-south-account-2",
+          "merchant_id": "demo-cross-south-merchant-2",
+          "amount": 4600,
+          "timestamp": 1795593700,
+          "bank_account_id": "demo-cross-beneficiary-bank"
+        }
+      ],
+      "risk_scores": {
+        "demo-cross-south-account-1": 0.85,
+        "demo-cross-south-account-2": 0.77
+      }
+    },
+    {
+      "batch_id": "cross-case-demo-control",
+      "transactions": [
+        {
+          "transaction_id": "demo-payment-1",
+          "customer_id": "demo-cross-control-account-1",
+          "merchant_id": "demo-cross-control-merchant-1",
+          "amount": 3900,
+          "timestamp": 1795593600,
+          "device_id": "demo-cross-control-device",
+          "ip_id": "demo-cross-shared-device"
+        },
+        {
+          "transaction_id": "demo-payment-2",
+          "customer_id": "demo-cross-control-account-2",
+          "merchant_id": "demo-cross-control-merchant-2",
+          "amount": 4600,
+          "timestamp": 1795593700,
+          "device_id": "demo-cross-control-device",
+          "ip_id": "demo-cross-shared-device"
+        }
+      ],
+      "risk_scores": {
+        "demo-cross-control-account-1": 0.85,
+        "demo-cross-control-account-2": 0.77
+      }
+    }
+  ]
+}

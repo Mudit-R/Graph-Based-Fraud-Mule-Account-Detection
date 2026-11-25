@@ -14,9 +14,19 @@ Conforms to Section 9 of the Production-Grade Merchant Fraud GNN Specification:
 """
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass, field
+from math import fsum
 from typing import Dict, List, Set, Tuple, Any, Optional
 import numpy as np
+
+
+LINK_FIELDS = ("device_id", "ip_id", "address_id", "promo_id", "bank_account_id")
+
+
+def _identifier_sort_key(value: Any) -> Tuple[str, str]:
+    """Order identifier values even when an older feed mixes strings and numbers."""
+    return str(value), type(value).__name__
 
 
 @dataclass
@@ -38,6 +48,7 @@ class CandidateRingReport:
     cross_merchant_connectivity: float     # [0.0, 1.0]
     predicted_ring_type: str
     risk_level: str                         # "CRITICAL" | "HIGH" | "MEDIUM"
+    transaction_ids: List[str] = field(default_factory=list)
 
 
 class RingDetectionEngine:
@@ -59,68 +70,65 @@ class RingDetectionEngine:
         """
         risk_map = account_risk_scores or {}
 
-        # 1. Build bipartite identifier adjacency
-        entity_to_txns: Dict[str, List[Dict[str, Any]]] = {}
-        for tx in transactions:
-            dev = tx.get("device_id")
-            ip = tx.get("ip_id")
-            addr = tx.get("address_id")
-            promo = tx.get("promo_id")
-            bank = tx.get("bank_account_id")
-
-            for ident_key in [dev, ip, addr, promo, bank]:
-                if ident_key:
-                    entity_to_txns.setdefault(ident_key, []).append(tx)
-
-        # 2. Find connected clusters sharing identifiers
-        visited_txns: Set[str] = set()
-        candidate_clusters: List[List[Dict[str, Any]]] = []
-
-        for tx in transactions:
-            tx_id = tx.get("transaction_id", "")
-            if tx_id in visited_txns:
+        # Keep only the first occurrence of a known transaction ID. A replay
+        # must not change which identifier links the original transaction has.
+        transactions_by_id = {}
+        identifiers_by_id = {}
+        transactions_by_identifier = {}
+        for transaction in transactions:
+            transaction_id = transaction.get("transaction_id")
+            if transaction_id in (None, "") or transaction_id in transactions_by_id:
                 continue
+            transactions_by_id[transaction_id] = transaction
+            identifiers = [
+                (field, value)
+                for field in LINK_FIELDS
+                if (value := transaction.get(field))
+            ]
+            identifiers_by_id[transaction_id] = identifiers
+            for identifier in identifiers:
+                transactions_by_identifier.setdefault(identifier, []).append(transaction_id)
 
-            # BFS cluster expansion
-            cluster: List[Dict[str, Any]] = []
-            queue = [tx]
-            visited_txns.add(tx_id)
-
+        # Each identifier bucket is expanded once, even when thousands of
+        # transactions share a device or network address.
+        visited_transactions = set()
+        visited_identifiers = set()
+        candidate_clusters = []
+        for transaction_id in transactions_by_id:
+            if transaction_id in visited_transactions:
+                continue
+            queue = deque([transaction_id])
+            visited_transactions.add(transaction_id)
+            cluster = []
             while queue:
-                curr = queue.pop(0)
-                cluster.append(curr)
-
-                shared_keys = [
-                    curr.get("device_id"),
-                    curr.get("ip_id"),
-                    curr.get("address_id"),
-                    curr.get("promo_id"),
-                    curr.get("bank_account_id"),
-                ]
-                for k in shared_keys:
-                    if not k:
+                current_id = queue.popleft()
+                cluster.append(current_id)
+                for identifier in identifiers_by_id[current_id]:
+                    if identifier in visited_identifiers:
                         continue
-                    for nbr_tx in entity_to_txns.get(k, []):
-                        nbr_id = nbr_tx.get("transaction_id", "")
-                        if nbr_id not in visited_txns:
-                            visited_txns.add(nbr_id)
-                            queue.append(nbr_tx)
-
+                    visited_identifiers.add(identifier)
+                    for neighbor_id in transactions_by_identifier[identifier]:
+                        if neighbor_id not in visited_transactions:
+                            visited_transactions.add(neighbor_id)
+                            queue.append(neighbor_id)
             if len(cluster) >= 2:
                 candidate_clusters.append(cluster)
+
+        candidate_clusters.sort(key=lambda cluster: min(_identifier_sort_key(value) for value in cluster))
 
         # 3. Analyze each cluster for fraud coordination signatures
         reports: List[CandidateRingReport] = []
 
-        for idx, cluster in enumerate(candidate_clusters):
-            members = list(set(tx.get("customer_id") for tx in cluster if tx.get("customer_id")))
-            merchants = list(set(tx.get("merchant_id") for tx in cluster if tx.get("merchant_id")))
-            devices = list(set(tx.get("device_id") for tx in cluster if tx.get("device_id")))
-            ips = list(set(tx.get("ip_id") for tx in cluster if tx.get("ip_id")))
-            addrs = list(set(tx.get("address_id") for tx in cluster if tx.get("address_id")))
-            promos = list(set(tx.get("promo_id") for tx in cluster if tx.get("promo_id")))
-            amounts = [float(tx.get("amount", 0.0)) for tx in cluster]
-            total_vol = sum(amounts)
+        for idx, transaction_ids in enumerate(candidate_clusters):
+            transaction_ids.sort(key=_identifier_sort_key)
+            cluster = [transactions_by_id[transaction_id] for transaction_id in transaction_ids]
+            members = sorted({tx["customer_id"] for tx in cluster if tx.get("customer_id")}, key=_identifier_sort_key)
+            merchants = sorted({tx["merchant_id"] for tx in cluster if tx.get("merchant_id")}, key=_identifier_sort_key)
+            devices = sorted({tx["device_id"] for tx in cluster if tx.get("device_id")}, key=_identifier_sort_key)
+            ips = sorted({tx["ip_id"] for tx in cluster if tx.get("ip_id")}, key=_identifier_sort_key)
+            addrs = sorted({tx["address_id"] for tx in cluster if tx.get("address_id")}, key=_identifier_sort_key)
+            promos = sorted({tx["promo_id"] for tx in cluster if tx.get("promo_id")}, key=_identifier_sort_key)
+            total_vol = fsum(float(tx.get("amount", 0.0)) for tx in cluster)
 
             # Temporal synchronization (std dev of time differences)
             timestamps = sorted([float(tx.get("timestamp", 0.0)) for tx in cluster])
@@ -167,6 +175,7 @@ class RingDetectionEngine:
                 cross_merchant_connectivity=round(cross_merch, 3),
                 predicted_ring_type=pred_type,
                 risk_level=risk_level,
+                transaction_ids=transaction_ids,
             ))
 
         return reports

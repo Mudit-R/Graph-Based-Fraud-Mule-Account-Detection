@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: abuse-ring-sentinel-demo
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile.render-demo
+    healthCheckPath: /health
+    envVars:
+      - key: FRAUD_CASE_NEO4J_PASSWORD
+        generateValue: true
+      - key: FRAUD_CASE_PUBLIC_DEMO
+        value: "true"
+      - key: FRAUD_CASE_BOOTSTRAP_DEMO
+        value: "true"

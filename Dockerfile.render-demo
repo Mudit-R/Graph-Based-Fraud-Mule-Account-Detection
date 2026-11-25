@@ -1,0 +1,34 @@
+FROM neo4j:5.26.34-community
+
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 python3-venv \
+    && rm -rf /var/lib/apt/lists/* \
+    && python3 -m venv /opt/case-api \
+    && /opt/case-api/bin/pip install --no-cache-dir --upgrade pip \
+    && mkdir -p /app/case-data \
+    && chown -R neo4j:neo4j /app
+
+WORKDIR /app
+COPY requirements-case-review.txt /app/requirements-case-review.txt
+RUN /opt/case-api/bin/pip install --no-cache-dir -r requirements-case-review.txt
+COPY src/__init__.py /app/src/__init__.py
+COPY src/api/__init__.py src/api/case_review.py src/api/case_store.py src/api/case_neo4j.py /app/src/api/
+COPY src/graph/__init__.py src/graph/ring_detector.py /app/src/graph/
+COPY src/api/analyst/ /app/src/api/analyst/
+COPY examples/cross-case-review-batches.json /app/examples/cross-case-review-batches.json
+COPY scripts/run_render_demo.sh /app/run_render_demo.sh
+RUN chown -R neo4j:neo4j /app
+
+ENV NEO4J_server_http_enabled=false \
+    NEO4J_dbms_usage__report_enabled=false \
+    NEO4J_server_memory_heap_initial__size=64m \
+    NEO4J_server_memory_heap_max__size=160m \
+    NEO4J_server_memory_pagecache_size=96m \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FRAUD_CASE_DATABASE=/app/case-data/review.sqlite3
+
+USER neo4j
+EXPOSE 8080
+ENTRYPOINT ["/bin/bash", "/app/run_render_demo.sh"]

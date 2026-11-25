@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fraud review</title>
+  <link rel="stylesheet" href="./console.css">
+  <script src="./console.js" type="module"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1>Fraud review</h1>
+      <div class="account">
+        <span id="identity" hidden></span>
+        <button id="disconnect" class="quiet inverse" type="button" hidden>Disconnect</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="notification" class="notification" role="status" aria-live="polite" hidden></div>
+
+    <form id="connect" class="card connect">
+      <h2>Connect to your review queue</h2>
+      <label for="token">Analyst token <span class="muted">(leave blank for public demo)</span></label>
+      <input id="token" name="token" type="password" autocomplete="off">
+      <button id="connect-button" type="submit">Connect</button>
+      <p class="muted">The public demo contains synthetic payments and is read-only.</p>
+    </form>
+
+    <div id="workspace" class="workspace" hidden>
+      <aside class="card queue" aria-labelledby="queue-title">
+        <div class="section-head">
+          <h2 id="queue-title">Cases</h2>
+          <button id="refresh" class="quiet" type="button" hidden>Refresh</button>
+        </div>
+        <div id="queue-controls" class="stack" hidden>
+          <label for="state-filter">Status</label>
+          <select id="state-filter">
+            <option value="">All cases</option>
+            <option value="open">Open</option>
+            <option value="in_review">In review</option>
+            <option value="escalated">Escalated</option>
+            <option value="dismissed">Dismissed</option>
+          </select>
+          <ul id="queue-list" class="queue-list" aria-label="Case list"></ul>
+          <p id="queue-empty" class="muted">No cases match this status.</p>
+          <button id="load-more" class="quiet" type="button" hidden>Load more</button>
+        </div>
+        <form id="import-form" class="stack intake" hidden>
+          <label for="batch-file">Import payment batch</label>
+          <input id="batch-file" type="file" accept=".json,application/json" required aria-describedby="file-limit">
+          <p id="file-limit" class="muted">JSON file up to 1 MB.</p>
+          <button type="submit">Import batch</button>
+          <button id="load-demo" class="quiet" type="button">Load synthetic case</button>
+          <button id="load-linked-demo" class="quiet" type="button" hidden>Load linked demo cases</button>
+        </form>
+      </aside>
+
+      <section id="case-shell" class="case-shell">
+        <div id="empty" class="card empty">Select a case to inspect its payment evidence and review history.</div>
+
+        <article id="case" class="case" aria-labelledby="case-title" hidden>
+          <section class="card case-summary">
+            <div class="section-head">
+              <div>
+                <h2 id="case-title"></h2>
+                <p id="case-meta" class="muted"></p>
+              </div>
+              <span id="case-state" class="status"></span>
+            </div>
+            <dl class="metrics">
+              <div><dt>Risk</dt><dd id="case-risk"></dd></div>
+              <div><dt>Exposure</dt><dd id="case-exposure"></dd></div>
+              <div><dt>Payments</dt><dd id="case-count"></dd></div>
+            </dl>
+          </section>
+
+          <section class="card" aria-labelledby="graph-title">
+            <div class="section-head graph-heading">
+              <h3 id="graph-title">Evidence graph</h3>
+              <div class="graph-controls">
+                <label id="graph-scope-label" class="inline" for="graph-scope" hidden>Scope
+                  <select id="graph-scope">
+                    <option value="current">Current case</option>
+                    <option value="connected">Connected cases</option>
+                  </select>
+                </label>
+                <label class="inline" for="hops">Depth
+                  <select id="hops"><option value="1">1 hop</option><option value="2" selected>2 hops</option><option value="3">3 hops</option><option value="4">4 hops</option></select>
+                </label>
+              </div>
+            </div>
+            <p id="graph-status" class="muted" role="status"></p>
+            <button id="retry-graph" class="quiet" type="button" hidden>Retry cross-case search</button>
+            <canvas id="graph" role="img" aria-label="Payment evidence graph. The same nodes and links are listed below."></canvas>
+            <div class="graph-legend" aria-hidden="true"><span>Payment</span><span>Linked identifier</span><span>Selected anchor</span><span id="remote-legend" hidden>Other case payment</span></div>
+            <div id="linked-cases" class="linked-cases" hidden>
+              <h4>Linked cases</h4>
+              <ul id="linked-case-list" aria-label="Linked cases in this graph"></ul>
+            </div>
+            <div id="graph-nodes" class="graph-nodes" aria-label="Explore graph nodes"></div>
+            <details>
+              <summary>Graph connections</summary>
+              <ul id="connections" class="connections"></ul>
+            </details>
+          </section>
+
+          <section class="card" aria-labelledby="payment-title">
+            <h3 id="payment-title">Payments</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th scope="col">Payment ID</th><th scope="col">Amount</th><th scope="col">Time (UTC)</th></tr></thead>
+                <tbody id="payments"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="card" aria-labelledby="review-title">
+            <h3 id="review-title">Analyst review</h3>
+            <ol id="history" class="history"></ol>
+            <p id="history-empty" class="muted">No decisions recorded.</p>
+            <form id="review-form" class="review-form" hidden>
+              <label for="decision">Decision</label>
+              <select id="decision"></select>
+              <label for="reason">Reason</label>
+              <textarea id="reason" rows="3" minlength="3" maxlength="1000" required></textarea>
+              <button type="submit">Record decision</button>
+            </form>
+          </section>
+        </article>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,139 @@
+{
+  "scope": "PaySim simulated transactions, chronological train/validation/test split",
+  "dataset_file": "PS_20174392719_1491204439457_log.csv",
+  "dataset_sha256": "16910f90577b0d981bf8ff289714510bb89bc71bff7d3f220f024e287e4eea6b",
+  "payments": 6362620,
+  "target_features": [
+    "log_amount",
+    "cash_in",
+    "cash_out",
+    "debit",
+    "payment",
+    "transfer",
+    "hour_sin",
+    "hour_cos",
+    "log_prior_hour_volume",
+    "log_prior_3h_volume",
+    "log_prior_24h_volume"
+  ],
+  "message_features_added": [
+    "normalized_log_age",
+    "incoming_at_endpoint"
+  ],
+  "partitions": {
+    "train": {
+      "first_step": 1,
+      "last_step": 281,
+      "payments": 3820599,
+      "fraud_payments": 3193
+    },
+    "validation": {
+      "first_step": 282,
+      "last_step": 355,
+      "payments": 1293285,
+      "fraud_payments": 770
+    },
+    "test": {
+      "first_step": 356,
+      "last_step": 743,
+      "payments": 1248736,
+      "fraud_payments": 4250
+    }
+  },
+  "training_rows": 183193,
+  "training_fraud_rows": 3193,
+  "selection_rows": 90770,
+  "config": {
+    "seed": 2026,
+    "neighbors": 8,
+    "window": 24,
+    "width": 32,
+    "heads": 4,
+    "train_negatives": 180000,
+    "selection_negatives": 90000,
+    "batch_size": 2048,
+    "score_batch_size": 8192,
+    "epochs": 10,
+    "patience": 4,
+    "learning_rate": 0.0015,
+    "positive_weight": 2.0
+  },
+  "device": "cpu",
+  "torch_version": "2.14.0+cpu",
+  "models": {
+    "temporal_gnn": {
+      "selected_epoch": 7,
+      "validation_checkpoint_selection_ap": [
+        0.23875959536280095,
+        0.3011747991587403,
+        0.34463804515884416,
+        0.35310191166457494,
+        0.37620671869901917,
+        0.38433516152862596,
+        0.39443410935726303,
+        0.37525959791441676,
+        0.3744543372007067,
+        0.380743707333069
+      ],
+      "test": {
+        "sample_count": 1248736,
+        "positive_count": 4250,
+        "threshold": 0.9377722144126892,
+        "roc_auc": 0.9517765548564298,
+        "average_precision": 0.1317941633521171,
+        "precision": 0.10703984617028095,
+        "recall": 0.23576470588235293,
+        "f1": 0.14723385497024466,
+        "reviewed_at_100": 100,
+        "true_positives_at_100": 96,
+        "precision_at_100": 0.96,
+        "recall_at_100": 0.02258823529411765,
+        "reviewed_at_500": 500,
+        "true_positives_at_500": 266,
+        "precision_at_500": 0.532,
+        "recall_at_500": 0.06258823529411765,
+        "reviewed_at_1000": 1000,
+        "true_positives_at_1000": 354,
+        "precision_at_1000": 0.354,
+        "recall_at_1000": 0.08329411764705882
+      }
+    },
+    "target_only": {
+      "selected_epoch": 6,
+      "validation_checkpoint_selection_ap": [
+        0.21520054402177635,
+        0.2740641390704925,
+        0.3256242852993936,
+        0.344721396590558,
+        0.3703618314903044,
+        0.38517965484132616,
+        0.37485614662584815,
+        0.3540840507110504,
+        0.32582096875487404,
+        0.34218303200215683
+      ],
+      "test": {
+        "sample_count": 1248736,
+        "positive_count": 4250,
+        "threshold": 0.7952272891998291,
+        "roc_auc": 0.9455061414913466,
+        "average_precision": 0.1589590511417701,
+        "precision": 0.04171484277585073,
+        "recall": 0.4329411764705882,
+        "f1": 0.0760975206269774,
+        "reviewed_at_100": 100,
+        "true_positives_at_100": 100,
+        "precision_at_100": 1.0,
+        "recall_at_100": 0.023529411764705882,
+        "reviewed_at_500": 500,
+        "true_positives_at_500": 357,
+        "precision_at_500": 0.714,
+        "recall_at_500": 0.084,
+        "reviewed_at_1000": 1000,
+        "true_positives_at_1000": 498,
+        "precision_at_1000": 0.498,
+        "recall_at_1000": 0.1171764705882353
+      }
+    }
+  }
+}

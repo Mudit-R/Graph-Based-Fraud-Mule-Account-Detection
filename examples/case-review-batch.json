@@ -1,0 +1,33 @@
+{
+  "batch_id": "example-batch",
+  "transactions": [
+    {
+      "transaction_id": "tx-1",
+      "customer_id": "customer-1",
+      "merchant_id": "merchant-1",
+      "device_id": "demo-device",
+      "amount": 3200,
+      "timestamp": 1000
+    },
+    {
+      "transaction_id": "tx-2",
+      "customer_id": "customer-2",
+      "merchant_id": "merchant-2",
+      "device_id": "demo-device",
+      "amount": 4100,
+      "timestamp": 1010
+    },
+    {
+      "transaction_id": "tx-3",
+      "customer_id": "customer-3",
+      "merchant_id": "merchant-3",
+      "ip_id": "demo-device",
+      "amount": 700,
+      "timestamp": 1020
+    }
+  ],
+  "risk_scores": {
+    "customer-1": 0.83,
+    "customer-2": 0.75
+  }
+}
