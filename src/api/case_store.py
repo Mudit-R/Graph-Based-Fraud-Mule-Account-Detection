@@ -200,7 +200,7 @@ class CaseStore:
                 case_ids.append(case_id)
             return {"created": True, "case_ids": sorted(case_ids)}
 
-    def claim_due_webhooks(self, now=None, lease_seconds=30, limit=20, max_attempts=6):
+    def claim_due_webhooks(self, now=None, lease_seconds=30, limit=1, max_attempts=6):
         """Claim due alerts with a lease so a restart can recover in-flight delivery."""
         now = time.time() if now is None else now
         with self.connect() as db:
@@ -229,23 +229,40 @@ class CaseStore:
                 claimed.append({**dict(row), "attempts": attempts})
             return claimed
 
-    def mark_webhook_delivered(self, event_id, now=None):
+    def mark_webhook_delivered(self, event_id, attempts, now=None):
         now = time.time() if now is None else now
         with self.connect() as db:
-            db.execute(
+            result = db.execute(
                 """UPDATE webhook_outbox SET status = 'delivered', locked_until = NULL,
-                   delivered_at = ?, last_error = NULL WHERE id = ? AND status = 'sending'""",
-                (now, event_id),
+                   delivered_at = ?, last_error = NULL
+                   WHERE id = ? AND status = 'sending' AND attempts = ?""",
+                (now, event_id, attempts),
             )
+            return result.rowcount == 1
 
     def reschedule_webhook(self, event_id, attempts, error, retry_at, max_attempts=6):
         status = "dead" if attempts >= max_attempts else "pending"
         with self.connect() as db:
-            db.execute(
+            result = db.execute(
                 """UPDATE webhook_outbox SET status = ?, next_attempt_at = ?, locked_until = NULL,
-                   last_error = ? WHERE id = ? AND status = 'sending'""",
-                (status, retry_at, str(error)[:500], event_id),
+                   last_error = ? WHERE id = ? AND status = 'sending' AND attempts = ?""",
+                (status, retry_at, str(error)[:500], event_id, attempts),
             )
+            return result.rowcount == 1
+
+    def webhook_delivery_summary(self):
+        with self.connect() as db:
+            rows = db.execute(
+                """SELECT status, COUNT(*) AS total, MIN(created_at) AS oldest_created_at
+                   FROM webhook_outbox GROUP BY status"""
+            ).fetchall()
+        counts = dict.fromkeys(("pending", "sending", "delivered", "dead"), 0)
+        oldest = []
+        for row in rows:
+            counts[row["status"]] = row["total"]
+            if row["status"] in {"pending", "sending"}:
+                oldest.append(row["oldest_created_at"])
+        return {"counts": counts, "oldest_undelivered_at": min(oldest, default=None)}
 
     def latest_projection_seq(self) -> int:
         with self.connect() as db:

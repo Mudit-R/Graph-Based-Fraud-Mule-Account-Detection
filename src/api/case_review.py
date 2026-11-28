@@ -238,6 +238,15 @@ def create_app(
             db.execute("SELECT 1 FROM review_cases LIMIT 1").fetchone()
         return {"status": "ok"}
 
+    @app.get("/ops/webhook-delivery")
+    def webhook_delivery(analyst: Analyst = Depends(authenticate)):
+        if analyst.role != "admin":
+            raise HTTPException(status_code=403, detail="Administrator access is required.")
+        return {
+            "configured": alert_webhook is not None,
+            **store.webhook_delivery_summary(),
+        }
+
     @app.post("/batches", dependencies=[can_ingest])
     def ingest(request: Intake, response: Response):
         try:

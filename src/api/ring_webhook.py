@@ -88,34 +88,38 @@ class RingAlertDispatcher:
         }
 
     def deliver_due_once(self, now=None) -> int:
-        now = time.time() if now is None else now
-        alerts = self.store.claim_due_webhooks(now=now, max_attempts=MAX_ATTEMPTS)
+        alerts = self.store.claim_due_webhooks(
+            now=now, lease_seconds=max(30, self.config.timeout_seconds * 4 + 10),
+            max_attempts=MAX_ATTEMPTS,
+        )
         if not alerts:
             return 0
+        alert, = alerts
+        body = alert["payload"].encode("utf-8")
         with self.client_factory() as client:
-            for alert in alerts:
-                body = alert["payload"].encode("utf-8")
-                try:
-                    response = client.post(
-                        self.config.url,
-                        content=body,
-                        headers=self.signed_headers(alert["id"], body),
-                    )
+            try:
+                with client.stream(
+                    "POST", self.config.url, content=body,
+                    headers=self.signed_headers(alert["id"], body),
+                ) as response:
                     response.raise_for_status()
-                    self.store.mark_webhook_delivered(alert["id"], now=now)
-                except Exception as exc:  # Retry transport errors and non-2xx responses.
-                    delay = min(self.config.max_retry_seconds,
-                                self.config.base_retry_seconds * (2 ** (alert["attempts"] - 1)))
-                    self.store.reschedule_webhook(
-                        alert["id"], alert["attempts"], type(exc).__name__, now + delay, MAX_ATTEMPTS,
-                    )
-                    logger.warning("High-risk case webhook delivery failed (%s)", type(exc).__name__)
-        return len(alerts)
+            except httpx.HTTPError as exc:
+                delay = min(self.config.max_retry_seconds,
+                            self.config.base_retry_seconds * (2 ** (alert["attempts"] - 1)))
+                finished_at = time.time() if now is None else now
+                self.store.reschedule_webhook(
+                    alert["id"], alert["attempts"], type(exc).__name__, finished_at + delay, MAX_ATTEMPTS,
+                )
+                logger.warning("High-risk case webhook delivery failed (%s)", type(exc).__name__)
+            else:
+                self.store.mark_webhook_delivered(alert["id"], alert["attempts"], now=now)
+        return 1
 
     def run(self, stop: threading.Event):
         while not stop.is_set():
             try:
-                self.deliver_due_once()
+                if self.deliver_due_once():
+                    continue
             except Exception as exc:
                 # Keep the service alive; durable outbox records can be retried after restart.
                 logger.warning("High-risk case webhook worker iteration failed (%s)", type(exc).__name__)

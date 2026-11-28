@@ -82,6 +82,12 @@ unset, and deployment must keep the case database durable if pending alerts need
 to survive a restart. The public free demo's ephemeral storage is not suitable
 for durable alert delivery.
 
+Administrators can call `GET /ops/webhook-delivery` with their bearer token
+to see counts of pending, sending, delivered and dead alerts, plus the creation
+time of the oldest outstanding alert as Unix seconds. Workers claim one alert
+at a time. An expired claim can be retried, and only the current attempt can
+update delivery state. Receivers should still deduplicate by event ID.
+
 ## Neo4j graph load test
 
 With the graph-profile API running and the synthetic cross-case fixture loaded,

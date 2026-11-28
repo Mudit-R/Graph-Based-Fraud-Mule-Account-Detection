@@ -5,9 +5,10 @@ import json
 import time
 
 import httpx
-from fastapi import Response
+from fastapi import HTTPException, Response
+import pytest
 
-from src.api.case_review import Intake, create_app
+from src.api.case_review import Analyst, Intake, create_app
 from src.api.case_store import CaseStore
 from src.api.ring_webhook import AlertWebhookConfig, RingAlertDispatcher
 
@@ -145,6 +146,43 @@ def test_repeated_delivery_failures_dead_letter_after_bounded_attempts(tmp_path)
     assert row["status"] == "dead"
     assert dispatcher.deliver_due_once(now=now + 100) == 0
     assert len(attempts) == 6
+
+
+def test_expired_worker_cannot_modify_the_recovered_attempt(tmp_path):
+    store = CaseStore(tmp_path / "cases.sqlite3")
+    store.ingest("lease", risky_batch()["transactions"],
+                 {"customer-a": 0.9, "customer-b": 0.8}, alert_threshold=0.70)
+    now = time.time() + 1
+    first, = store.claim_due_webhooks(now=now, lease_seconds=1)
+    assert store.claim_due_webhooks(now=now + 0.5) == []
+    second, = store.claim_due_webhooks(now=now + 2)
+    assert first["id"] == second["id"]
+    assert second["attempts"] == 2
+    assert not store.reschedule_webhook(first["id"], first["attempts"], "timeout", now + 10)
+    assert not store.mark_webhook_delivered(first["id"], first["attempts"], now=now + 2)
+    assert store.mark_webhook_delivered(second["id"], second["attempts"], now=now + 3)
+    assert outbox_row(store.database)["status"] == "delivered"
+
+
+def test_outbox_summary_exposes_aggregate_state_only_to_admins(tmp_path):
+    app = create_app(
+        tmp_path / "cases.sqlite3", "analyst", TOKEN,
+        alert_webhook=AlertWebhookConfig("https://alerts.example.test/hook", SECRET),
+        start_alert_worker=False,
+    )
+    store = app.state.case_store
+    store.ingest("ops", risky_batch()["transactions"],
+                 {"customer-a": 0.9, "customer-b": 0.8}, alert_threshold=0.70)
+    route = next(route.endpoint for route in app.routes if route.path == "/ops/webhook-delivery")
+    with pytest.raises(HTTPException) as denied:
+        route(Analyst("viewer", "viewer"))
+    assert denied.value.status_code == 403
+    summary = route(Analyst("operator", "admin"))
+    assert summary == {
+        "configured": True,
+        "counts": {"pending": 1, "sending": 0, "delivered": 0, "dead": 0},
+        "oldest_undelivered_at": outbox_row(store.database)["created_at"],
+    }
 
 
 def test_webhook_config_requires_signature_secret_and_secure_destination():
