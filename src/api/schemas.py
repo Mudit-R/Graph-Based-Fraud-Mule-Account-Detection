@@ -164,3 +164,74 @@ class AuditActionResponse(BaseModel):
     analyst_id: str
     timestamp: str
     status: str = "RECORDED"
+
+
+# ── AML Triage & Graph Subgraph Models ───────────────────────────────────────
+
+class AMLRuleViolation(BaseModel):
+    """Specific regulatory or behavioral rule violation."""
+    rule_code: str
+    rule_name: str
+    description: str
+    severity: str  # "CRITICAL" | "HIGH" | "MEDIUM"
+    observed_value: float
+    threshold_value: float
+
+
+class AMLTriageRequest(BaseModel):
+    """Request model for real-time deterministic AML rule triage."""
+    account_id: str = Field(..., description="Unique merchant or account ID")
+    total_sent_log: float = 0.0
+    total_received_log: float = 0.0
+    tx_count_out: float = 0.0
+    tx_count_in: float = 0.0
+    unique_dest_count: float = 0.0
+    balance_drain_ratio: float = Field(0.0, description="Ratio of funds drained immediately upon receipt")
+    night_tx_fraction: float = Field(0.0, ge=0.0, le=1.0, description="Fraction of volume between 00:00-06:00")
+    amount_spike_ratio: float = Field(0.0, description="24h volume vs 7d baseline surge multiplier")
+    in_degree: float = 0.0
+    out_degree: float = 0.0
+    degree_ratio: float = 0.0
+    gnn_risk_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="Optional pre-computed GNN probability")
+
+
+class AMLTriageResponse(BaseModel):
+    """Deterministic AML compliance triage outcome."""
+    account_id: str
+    triage_status: str  # "BLOCK_IMMEDIATELY" | "MANUAL_AML_REVIEW" | "FAST_PASS_CLEAN"
+    risk_level: str     # "CRITICAL" | "ELEVATED" | "LOW"
+    composite_risk_score: float
+    violations: List[AMLRuleViolation]
+    regulatory_typology: List[str]
+    processing_time_ms: float
+
+
+class SubgraphNode(BaseModel):
+    """Graph node in the 2-hop ego network."""
+    id: str
+    label: str
+    risk_score: float
+    is_focal: bool
+    degree: int
+    node_type: str = "MERCHANT"
+
+
+class SubgraphEdge(BaseModel):
+    """Directed money transaction edge."""
+    source: str
+    target: str
+    tx_volume_inr: float
+    tx_count: int
+    velocity_anomaly: bool
+
+
+class EgoSubgraphResponse(BaseModel):
+    """2-Hop Ego Graph visualization payload."""
+    focal_account_id: str
+    hop_depth: int
+    total_nodes: int
+    total_edges: int
+    nodes: List[SubgraphNode]
+    edges: List[SubgraphEdge]
+    cluster_density: float
+    suspected_ring: bool

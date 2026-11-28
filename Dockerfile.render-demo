@@ -23,9 +23,9 @@ RUN chown -R neo4j:neo4j /app
 
 ENV NEO4J_server_http_enabled=false \
     NEO4J_dbms_usage__report_enabled=false \
-    NEO4J_server_memory_heap_initial__size=64m \
-    NEO4J_server_memory_heap_max__size=160m \
-    NEO4J_server_memory_pagecache_size=96m \
+    NEO4J_server_memory_heap_initial__size=48m \
+    NEO4J_server_memory_heap_max__size=96m \
+    NEO4J_server_memory_pagecache_size=32m \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     FRAUD_CASE_DATABASE=/app/case-data/review.sqlite3

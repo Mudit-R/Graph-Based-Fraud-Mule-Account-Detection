@@ -7,6 +7,7 @@ import json
 from itertools import groupby
 from pathlib import Path
 import sqlite3
+import time
 from uuid import uuid4
 
 from src.graph.ring_detector import RingDetectionEngine
@@ -51,7 +52,8 @@ class CaseStore:
                 CREATE TABLE IF NOT EXISTS review_cases (
                     id TEXT PRIMARY KEY, batch_id TEXT NOT NULL REFERENCES intake_batches(batch_id),
                     risk TEXT NOT NULL, typology TEXT NOT NULL, exposure REAL NOT NULL,
-                    state TEXT NOT NULL DEFAULT 'open', version INTEGER NOT NULL DEFAULT 0
+                    state TEXT NOT NULL DEFAULT 'open', version INTEGER NOT NULL DEFAULT 0,
+                    fraud_score REAL NOT NULL DEFAULT 0.1
                 );
                 CREATE INDEX IF NOT EXISTS review_case_queue ON review_cases(state, id);
                 CREATE INDEX IF NOT EXISTS review_case_batch ON review_cases(batch_id);
@@ -75,7 +77,26 @@ class CaseStore:
                     seq INTEGER PRIMARY KEY AUTOINCREMENT,
                     case_id TEXT NOT NULL UNIQUE REFERENCES review_cases(id)
                 );
+                CREATE TABLE IF NOT EXISTS webhook_outbox (
+                    id TEXT PRIMARY KEY,
+                    case_id TEXT NOT NULL UNIQUE REFERENCES review_cases(id),
+                    payload TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'pending'
+                        CHECK(status IN ('pending', 'sending', 'delivered', 'dead')),
+                    attempts INTEGER NOT NULL DEFAULT 0,
+                    next_attempt_at REAL NOT NULL,
+                    locked_until REAL,
+                    last_error TEXT,
+                    created_at REAL NOT NULL,
+                    delivered_at REAL
+                );
+                CREATE INDEX IF NOT EXISTS webhook_outbox_due
+                    ON webhook_outbox(status, next_attempt_at, locked_until);
             """)
+            # Additive migration for workspaces created before risk scores were persisted.
+            case_columns = {row["name"] for row in db.execute("PRAGMA table_info(review_cases)")}
+            if "fraud_score" not in case_columns:
+                db.execute("ALTER TABLE review_cases ADD COLUMN fraud_score REAL NOT NULL DEFAULT 0.1")
             db.execute("BEGIN IMMEDIATE")
             db.execute(
                 "INSERT OR IGNORE INTO graph_workspace (singleton, workspace_id) VALUES (1, ?)",
@@ -103,7 +124,7 @@ class CaseStore:
         finally:
             db.close()
 
-    def ingest(self, batch_id, transactions, risk_scores):
+    def ingest(self, batch_id, transactions, risk_scores, alert_threshold=None):
         ordered = sorted(transactions, key=lambda event: event["transaction_id"])
         payload = json.dumps([ordered, risk_scores], sort_keys=True, separators=(",", ":"))
         digest = sha256(payload.encode()).hexdigest()
@@ -138,18 +159,93 @@ class CaseStore:
                 identity = json.dumps([batch_id, ring.transaction_ids], separators=(",", ":"))
                 case_id = sha256(identity.encode()).hexdigest()
                 db.execute(
-                    """INSERT INTO review_cases (id, batch_id, risk, typology, exposure)
-                       VALUES (?, ?, ?, ?, ?)""",
+                    """INSERT INTO review_cases (id, batch_id, risk, typology, exposure, fraud_score)
+                       VALUES (?, ?, ?, ?, ?, ?)""",
                     (case_id, batch_id, ring.risk_level, ring.predicted_ring_type,
-                     ring.total_exposure_inr),
+                     ring.total_exposure_inr, ring.fraud_concentration),
                 )
                 db.executemany(
                     "INSERT INTO case_evidence VALUES (?, ?, ?)",
                     [(case_id, batch_id, event_id) for event_id in ring.transaction_ids],
                 )
                 db.execute("INSERT INTO case_projection (case_id) VALUES (?)", (case_id,))
+                if alert_threshold is not None and ring.fraud_concentration >= alert_threshold:
+                    now = time.time()
+                    # Keep customer, device and account identifiers out of outbound alerts.
+                    alert_payload = {
+                        "event": "fraud.ring.high_risk",
+                        "text": (
+                            f"High-risk payment ring ({ring.risk_level}): "
+                            f"{ring.transaction_count} transactions, "
+                            f"score {ring.fraud_concentration:.2f}, "
+                            f"estimated exposure ₹{ring.total_exposure_inr:,.0f}."
+                        ),
+                        "case_id": case_id,
+                        "risk_level": ring.risk_level,
+                        "fraud_score": ring.fraud_concentration,
+                        "threshold": alert_threshold,
+                        "typology": ring.predicted_ring_type,
+                        "transaction_count": ring.transaction_count,
+                        "entity_count": ring.entity_count,
+                        "exposure_inr": ring.total_exposure_inr,
+                        "detected_at": ring.detected_at,
+                    }
+                    db.execute(
+                        """INSERT OR IGNORE INTO webhook_outbox
+                           (id, case_id, payload, next_attempt_at, created_at)
+                           VALUES (?, ?, ?, ?, ?)""",
+                        (f"fraud.ring.high_risk:{case_id}", case_id,
+                         json.dumps(alert_payload, sort_keys=True, separators=(",", ":")), now, now),
+                    )
                 case_ids.append(case_id)
             return {"created": True, "case_ids": sorted(case_ids)}
+
+    def claim_due_webhooks(self, now=None, lease_seconds=30, limit=20, max_attempts=6):
+        """Claim due alerts with a lease so a restart can recover in-flight delivery."""
+        now = time.time() if now is None else now
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            db.execute(
+                """UPDATE webhook_outbox SET status = 'dead', locked_until = NULL,
+                   last_error = COALESCE(last_error, 'delivery lease expired after final attempt')
+                   WHERE status = 'sending' AND locked_until <= ? AND attempts >= ?""",
+                (now, max_attempts),
+            )
+            rows = db.execute(
+                """SELECT id, case_id, payload, attempts FROM webhook_outbox
+                   WHERE attempts < ? AND next_attempt_at <= ?
+                     AND (status = 'pending' OR (status = 'sending' AND locked_until <= ?))
+                   ORDER BY created_at, id LIMIT ?""",
+                (max_attempts, now, now, limit),
+            ).fetchall()
+            claimed = []
+            for row in rows:
+                attempts = row["attempts"] + 1
+                db.execute(
+                    """UPDATE webhook_outbox SET status = 'sending', attempts = ?, locked_until = ?
+                       WHERE id = ?""",
+                    (attempts, now + lease_seconds, row["id"]),
+                )
+                claimed.append({**dict(row), "attempts": attempts})
+            return claimed
+
+    def mark_webhook_delivered(self, event_id, now=None):
+        now = time.time() if now is None else now
+        with self.connect() as db:
+            db.execute(
+                """UPDATE webhook_outbox SET status = 'delivered', locked_until = NULL,
+                   delivered_at = ?, last_error = NULL WHERE id = ? AND status = 'sending'""",
+                (now, event_id),
+            )
+
+    def reschedule_webhook(self, event_id, attempts, error, retry_at, max_attempts=6):
+        status = "dead" if attempts >= max_attempts else "pending"
+        with self.connect() as db:
+            db.execute(
+                """UPDATE webhook_outbox SET status = ?, next_attempt_at = ?, locked_until = NULL,
+                   last_error = ? WHERE id = ? AND status = 'sending'""",
+                (status, retry_at, str(error)[:500], event_id),
+            )
 
     def latest_projection_seq(self) -> int:
         with self.connect() as db:

@@ -17,8 +17,8 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass, field
 from math import fsum
+from statistics import fmean
 from typing import Dict, List, Set, Tuple, Any, Optional
-import numpy as np
 
 
 LINK_FIELDS = ("device_id", "ip_id", "address_id", "promo_id", "bank_account_id")
@@ -133,15 +133,16 @@ class RingDetectionEngine:
             # Temporal synchronization (std dev of time differences)
             timestamps = sorted([float(tx.get("timestamp", 0.0)) for tx in cluster])
             if len(timestamps) > 1:
-                intervals = np.diff(timestamps)
-                mean_interval = np.mean(intervals)
-                sync_score = float(np.clip(1.0 / (1.0 + mean_interval / 3600.0), 0.0, 1.0))
+                intervals = [timestamps[index] - timestamps[index - 1]
+                             for index in range(1, len(timestamps))]
+                mean_interval = fmean(intervals)
+                sync_score = min(1.0, max(0.0, 1.0 / (1.0 + mean_interval / 3600.0)))
             else:
                 sync_score = 0.5
 
             # Fraud concentration based on model risk scores
             member_scores = [risk_map.get(m, 0.1) for m in members]
-            fraud_conc = float(np.mean(member_scores)) if member_scores else 0.1
+            fraud_conc = fmean(member_scores) if member_scores else 0.1
             cross_merch = float(min(1.0, len(merchants) / 3.0))
 
             # Infer ring type
@@ -214,7 +215,7 @@ class RingDetectionEngine:
                             total_prevented_loss += float(ev.get("amount", 0.0))
 
         ring_recall = len(matched_ground_truth) / len(ground_truth_rings)
-        mean_ttfd = float(np.mean(ttfd_list)) if ttfd_list else 0.0
+        mean_ttfd = fmean(ttfd_list) if ttfd_list else 0.0
 
         return {
             "total_true_rings": len(ground_truth_rings),

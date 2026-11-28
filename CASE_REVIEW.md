@@ -53,6 +53,56 @@ when configured. The single-account launch described above grants admin access.
 The API verifies permissions on each operation. Review records identify the
 authenticated analyst. Restart the service after changing the credential registry.
 
+## High-risk ring webhooks
+
+The case API can send a signed, redacted alert when a newly detected ring's
+mean account fraud score meets a configured threshold. Delivery is disabled when
+`FRAUD_CASE_ALERT_WEBHOOK_URL` is unset. To enable it, configure an HTTPS target
+and a unique signing secret of at least 32 ASCII characters:
+
+```powershell
+$env:FRAUD_CASE_ALERT_WEBHOOK_URL = 'https://your-owned-endpoint.example/fraud-alerts'
+$env:FRAUD_CASE_ALERT_WEBHOOK_SECRET = 'replace-with-a-random-secret-of-32-or-more-characters'
+$env:FRAUD_CASE_ALERT_THRESHOLD = '0.70'
+```
+
+The threshold defaults to `0.70`. The event contains a case ID, score, risk
+level, typology, event counts, exposure and detection time. It omits customer,
+device, IP and account identifiers. Its text field makes the JSON payload compatible with Slack incoming webhooks and general HTTP receivers. The request carries an HMAC-SHA256 signature
+in `X-Case-Signature` over the exact UTF-8 request body, plus a stable
+`Idempotency-Key` and `X-Case-Event-Id`. Verify the signature before acting and
+deduplicate on the event ID. Use the configured secret only in the service and
+the destination's secret manager; never put it in the repository.
+
+Case creation and alert enqueue share one SQLite transaction. The lifespan
+worker retries delivery with exponential backoff (six attempts, capped at five
+minutes). Failures remain in the local outbox as pending or dead-letter records;
+successful events are marked delivered. There is no delivery when the URL is
+unset, and deployment must keep the case database durable if pending alerts need
+to survive a restart. The public free demo's ephemeral storage is not suitable
+for durable alert delivery.
+
+## Neo4j graph load test
+
+With the graph-profile API running and the synthetic cross-case fixture loaded,
+run the k6 script from the repository root:
+
+```powershell
+$env:BASE_URL = 'http://127.0.0.1:8002'
+$env:FRAUD_CASE_TOKEN = '<reviewer-or-admin-bearer-token>'
+k6 run --summary-trend-stats='avg,min,med,max,p(95),p(99)' loadtest/case-graph.js
+```
+
+It performs 30 sequential warm requests to the authenticated four-hop
+`/related-graph` endpoint, resolving a case through `/cases` unless `CASE_ID` is
+provided. k6 reports `med` (p50) and p95 latency, request failures, and response
+checks. The original 59.51 ms p50 / 75.84 ms p95 figures were measured locally
+on a synthetic 240-case, 1,440-payment Neo4j fixture with 30 warm requests.
+Reproduce a comparable sample by using the same fixture, local machine, Neo4j
+version and query limits. Results from different hardware, graph sizes, cold
+projection state or concurrent load are not directly comparable; this script
+measures the current setup and does not force those historical numbers.
+
 ## Container
 
 To start a container with a local persistent volume, export the same variables

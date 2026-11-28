@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 from secrets import compare_digest
 from secrets import token_urlsafe
+from threading import Event, Thread
 from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
@@ -18,6 +19,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from src.api.case_store import CaseStore, Conflict
+from src.api.ring_webhook import AlertWebhookConfig, RingAlertDispatcher
 
 
 Identifier = Annotated[str, StringConstraints(pattern=r"^[a-zA-Z0-9_.:-]{1,96}$")]
@@ -134,6 +136,9 @@ def create_app(
     graph_backend=None,
     public_demo: bool = False,
     bootstrap_demo: bool = False,
+    alert_webhook: AlertWebhookConfig | None = None,
+    webhook_client_factory=None,
+    start_alert_worker: bool = True,
 ) -> FastAPI:
     if credentials is None:
         if analyst_id is None and token is None and public_demo:
@@ -162,21 +167,41 @@ def create_app(
         analysts_by_token[token_digest] = Analyst(name, role)
 
     store = CaseStore(database)
+    alert_dispatcher = (
+        RingAlertDispatcher(store, alert_webhook, webhook_client_factory)
+        if alert_webhook is not None else None
+    )
+    alert_stop = Event()
 
     @asynccontextmanager
     async def lifespan(_app):
+        alert_thread = None
         try:
             if bootstrap_demo:
                 fixture = json.loads((Path(__file__).parents[2] / "examples" / "cross-case-review-batches.json").read_text(encoding="utf-8"))
                 for batch in fixture["batches"]:
-                    store.ingest(batch["batch_id"], batch["transactions"], batch.get("risk_scores", {}))
+                    store.ingest(
+                        batch["batch_id"], batch["transactions"], batch.get("risk_scores", {}),
+                        alert_threshold=alert_webhook.threshold if alert_webhook else None,
+                    )
+            if alert_dispatcher is not None and start_alert_worker:
+                alert_thread = Thread(
+                    target=alert_dispatcher.run, args=(alert_stop,),
+                    name="fraud-ring-alert-outbox", daemon=True,
+                )
+                alert_thread.start()
             yield
         finally:
+            if alert_thread is not None:
+                alert_stop.set()
+                alert_thread.join(timeout=(alert_webhook.timeout_seconds + 1) if alert_webhook else 6)
             close_graph = getattr(graph_backend, "close", None)
             if close_graph is not None:
                 close_graph()
 
     app = FastAPI(title="Fraud Analyst Case Review", lifespan=lifespan)
+    app.state.alert_dispatcher = alert_dispatcher
+    app.state.case_store = store
     bearer = HTTPBearer(auto_error=False)
 
     def authenticate(
@@ -219,6 +244,7 @@ def create_app(
             result = store.ingest(
                 request.batch_id, [event.model_dump() for event in request.transactions],
                 request.risk_scores,
+                alert_threshold=alert_webhook.threshold if alert_webhook else None,
             )
         except Conflict as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
@@ -343,6 +369,7 @@ def create_app_from_env() -> FastAPI:
             os.getenv("FRAUD_CASE_NEO4J_DATABASE", "neo4j"),
         )
     configured = os.getenv("FRAUD_CASE_CREDENTIALS_JSON")
+    alert_webhook = AlertWebhookConfig.from_env()
     if configured:
         try:
             credentials = json.loads(configured)
@@ -354,10 +381,12 @@ def create_app_from_env() -> FastAPI:
             database, credentials=credentials, graph_backend=graph_backend,
             public_demo=os.getenv("FRAUD_CASE_PUBLIC_DEMO", "").lower() == "true",
             bootstrap_demo=os.getenv("FRAUD_CASE_BOOTSTRAP_DEMO", "").lower() == "true",
+            alert_webhook=alert_webhook,
         )
     return create_app(
         database, os.getenv("FRAUD_CASE_ANALYST"), os.getenv("FRAUD_CASE_TOKEN"),
         graph_backend=graph_backend,
         public_demo=os.getenv("FRAUD_CASE_PUBLIC_DEMO", "").lower() == "true",
         bootstrap_demo=os.getenv("FRAUD_CASE_BOOTSTRAP_DEMO", "").lower() == "true",
+        alert_webhook=alert_webhook,
     )

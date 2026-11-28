@@ -7,6 +7,7 @@ export FRAUD_CASE_NEO4J_URI="bolt://127.0.0.1:7687"
 export FRAUD_CASE_PUBLIC_DEMO=true
 export FRAUD_CASE_BOOTSTRAP_DEMO=true
 export FRAUD_CASE_DATABASE=/app/case-data/review.sqlite3
+export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -XX:MaxMetaspaceSize=96m -XX:ReservedCodeCacheSize=32m -XX:MaxDirectMemorySize=48m -Xss256k"
 
 "/opt/case-api/bin/python" -m uvicorn src.api.case_review:create_app_from_env \
   --factory --host 0.0.0.0 --port "${PORT:-8080}" &
